@@ -1,5 +1,5 @@
 /* ==========================================================================
-   IG Carousel for Squarespace 7.1 — v1.1.0
+   IG Carousel for Squarespace 7.1 — v1.2.0
    Instagram-style post carousel built from native Squarespace content.
    https://github.com/zsawtelle-lgtm/sqsp-social-highlight-scroll
 
@@ -37,7 +37,7 @@
 
   if (window.IGCarousel && window.IGCarousel.version) return; // loaded twice
 
-  var VERSION = '1.1.0';
+  var VERSION = '1.2.0';
 
   var DEFAULTS = {
     idPrefix: 'ig-carousel',
@@ -189,14 +189,9 @@
     return c.textContent;
   }
 
-  function isImageUrl(url) {
-    return /\.(jpe?g|png|gif|webp|avif)(\?|#|$)/i.test(url) || /images\.squarespace-cdn\.com|\/thumbnail(\?|$)/.test(url);
-  }
-
   /* Formatted post text (text blocks, video descriptions, code-block lines):
        bold          → account name
-       link → image  → profile picture
-       other link    → where the comment icon links
+       link          → where the comment icon links
      The rest is the caption ("key: value" lines still work). */
   function parseRich(node) {
     if (!node) return parseText(null);
@@ -205,8 +200,7 @@
     var bold = $('strong, b', c);
     if (bold) { meta.account = bold.textContent.trim(); bold.remove(); }
     $$('a[href]', c).forEach(function (a) {
-      var href = a.getAttribute('href');
-      if (isImageUrl(href)) { if (!meta.avatar) meta.avatar = href; } else if (!meta.link) meta.link = href;
+      if (!meta.link) meta.link = a.getAttribute('href');
       a.remove();
     });
     var t = parseText(c);
@@ -291,10 +285,17 @@
       var cfg = {};
       try { cfg = JSON.parse(native.getAttribute('data-config-video')); } catch (e) { cfg = {}; }
       if (cfg.alexandriaUrl) {
+        // The block's custom thumbnail (Video block → Thumbnail) is the post's
+        // profile picture; the video keeps its own first-frame poster.
+        var thumb = {};
+        try { thumb = JSON.parse(native.getAttribute('data-config-thumbnail') || '{}'); } catch (e) { thumb = {}; }
+        var fp = thumb.mediaFocalPoint;
         return [{
           type: 'hls',
           url: cfg.alexandriaUrl.replace('{variant}', 'playlist.m3u8'),
           poster: cfg.alexandriaUrl.replace('{variant}', 'thumbnail'),
+          avatar: thumb.assetUrl || '',
+          avatarFocal: fp ? fp.x + ',' + fp.y : '',
           text: $('.video-caption', block)
         }];
       }
@@ -387,6 +388,7 @@
       }
       mediaFromBlock(b).forEach(function (m) {
         if (m.text) texts.push(parseRich(m.text));   // video block description
+        if (m.avatar && !post.meta.avatar) { post.meta.avatar = m.avatar; post.meta.avatarFocal = m.avatarFocal; }
         post.slides.push(m);
       });
     });
@@ -505,7 +507,11 @@
     vp.addEventListener('click', function (e) {
       if (!focus) return;
       var card = e.target.closest('.igc-post');
-      if (card && !card.classList.contains('is-active')) { e.preventDefault(); self.goTo(self.cards.indexOf(card)); }
+      if (card && !card.classList.contains('is-active')) {
+        e.preventDefault();
+        e.stopPropagation();   // only centre it: don't also count as a tap on its video
+        self.goTo(self.cards.indexOf(card));
+      }
     }, true);
     this.observe();
     this.update();
@@ -583,6 +589,8 @@
     var av = el('div', 'igc-avatar');
     av.setAttribute('data-ring', String(!!o.avatarRing));
     av.innerHTML = avatar ? '<img src="' + esc(sized(avatar, 300)) + '" alt="" loading="lazy">' : '<span>' + esc(account.charAt(0) || '•') + '</span>';
+    var af = String(m.avatarFocal || '').split(',');
+    if (avatar && af.length === 2 && !isNaN(parseFloat(af[0]))) $('img', av).style.objectPosition = (parseFloat(af[0]) * 100) + '% ' + (parseFloat(af[1]) * 100) + '%';
     var who = el('div', 'igc-who');
     var nameTag = profile ? 'a' : 'span';
     who.innerHTML = '<' + nameTag + ' class="igc-account"' + (profile ? ' href="' + esc(profile) + '" target="_blank" rel="noopener"' : '') + '>' +
