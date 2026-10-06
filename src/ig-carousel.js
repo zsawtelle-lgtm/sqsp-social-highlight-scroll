@@ -40,10 +40,13 @@
     avatar: '',             // image URL for the profile picture
     profile: '',            // URL the account name links to
     verified: false,        // blue check after the account name
-    avatarRing: true,       // Instagram story-ring gradient around avatar
+    avatarRing: false,      // Instagram story-ring gradient around avatar
     location: '',           // small line under the account name
     aspect: '4:5',          // 1:1 | 4:5 | 16:9 | 9:16 | native | any "w:h"
-    perView: 3,             // posts visible on desktop
+    layout: 'focus',        // focus = one centred post, neighbours peek (Framer look)
+                            // row   = several posts side by side
+    cardWidth: '',          // focus layout card width, e.g. "420px" (default 380px)
+    perView: 3,             // row layout: posts visible on desktop
     perViewTablet: 2,
     perViewMobile: 1.12,
     theme: 'light',         // light | dark | section
@@ -54,8 +57,10 @@
     countUp: true,          // like counts count up when scrolled into view
     doubleTapLike: true,    // double-click / double-tap image to like
     rememberLikes: true,    // keep a visitor's likes/saves in their browser
-    showCounter: true,      // "1/3" badge on multi-image posts
+    showCounter: false,     // "1/3" badge on multi-image posts
     showLikes: true,
+    likesStyle: 'inline',   // inline = number beside the heart (Framer look)
+                            // line   = "1,204 likes" under the icons (Instagram look)
     showDate: true,
     autoplayVideo: true,    // muted autoplay while the post is on screen
     sections: 'auto',       // section/code-block mode: how many sections to pull
@@ -68,16 +73,18 @@
 
   /* ------------------------------------------------------------ Icons */
   var ICON = {
-    heart: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M16.79 3.5c-1.98 0-3.42 1.2-4.79 2.86C10.63 4.7 9.19 3.5 7.21 3.5 4.3 3.5 2 5.88 2 8.97c0 4.52 4.58 8.21 10 11.53 5.42-3.32 10-7.01 10-11.53 0-3.09-2.3-5.47-5.21-5.47z"/></svg>',
-    comment: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M20.66 17.01A9.99 9.99 0 1 0 17.07 20.62L22 22z"/></svg>',
-    repost: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 11V9.5A3.5 3.5 0 0 1 7.5 6H19"/><path d="m16 3 3 3-3 3"/><path d="M20 13v1.5a3.5 3.5 0 0 1-3.5 3.5H5"/><path d="m8 21-3-3 3-3"/></svg>',
-    share: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M22 3 9.22 10.08"/><path d="M11.7 20.33 22 3H2l7.22 7.08z"/></svg>',
-    save: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M20 21 12 13.44 4 21V3h16z"/></svg>',
-    more: '<svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>',
-    prev: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>',
-    next: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>',
-    burst: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16.79 3.5c-1.98 0-3.42 1.2-4.79 2.86C10.63 4.7 9.19 3.5 7.21 3.5 4.3 3.5 2 5.88 2 8.97c0 4.52 4.58 8.21 10 11.53 5.42-3.32 10-7.01 10-11.53 0-3.09-2.3-5.47-5.21-5.47z"/></svg>',
-    verified: '<svg class="igc-verified" viewBox="0 0 40 40" aria-label="Verified"><path fill="#0095f6" d="M19.998 3.094 14.638 0l-2.972 5.15H5.432v6.354L0 14.64 3.094 20 0 25.359l5.432 3.137v5.905h5.975L14.638 40l5.36-3.094L25.358 40l3.232-5.6h6.162v-6.01L40 25.359 36.905 20 40 14.641l-5.248-3.03v-6.46h-6.419L25.358 0l-5.36 3.094Z"/><path fill="#fff" d="m17.42 26.53-6.06-6.06 2.12-2.12 3.94 3.94 8.68-8.68 2.12 2.12z"/></svg>',
+    heart: '<svg class="igc-heart-off" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16.792 3.904A4.989 4.989 0 0 1 21.5 9.122c0 3.072-2.652 4.959-5.197 7.222-2.512 2.243-3.865 3.469-4.303 3.752-.477-.309-2.143-1.823-4.303-3.752C5.141 14.072 2.5 12.167 2.5 9.122a4.989 4.989 0 0 1 4.708-5.218 4.21 4.21 0 0 1 3.675 1.941c.84 1.175.98 1.763 1.12 1.763s.278-.588 1.11-1.766a4.17 4.17 0 0 1 3.679-1.938m0-2a6.04 6.04 0 0 0-4.797 2.127 6.052 6.052 0 0 0-4.787-2.127A6.985 6.985 0 0 0 .5 9.122c0 3.61 2.55 5.827 5.015 7.97.283.246.569.494.853.747l1.027.918a44.998 44.998 0 0 0 3.518 3.018 2 2 0 0 0 2.174 0 45.263 45.263 0 0 0 3.626-3.115l.922-.824c.293-.26.59-.519.885-.774 2.334-2.025 4.98-4.32 4.98-7.94a6.985 6.985 0 0 0-6.708-7.218Z"/></svg>' +
+           '<svg class="igc-heart-on" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16.792 1.904a6.04 6.04 0 0 0-4.797 2.127 6.052 6.052 0 0 0-4.787-2.127A6.985 6.985 0 0 0 .5 9.122c0 3.61 2.55 5.827 5.015 7.97.283.246.569.494.853.747l1.027.918a44.998 44.998 0 0 0 3.518 3.018 2 2 0 0 0 2.174 0 45.263 45.263 0 0 0 3.626-3.115l.922-.824c.293-.26.59-.519.885-.774 2.334-2.025 4.98-4.32 4.98-7.94a6.985 6.985 0 0 0-6.708-7.218Z"/></svg>',
+    comment: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.656 17.008a9.993 9.993 0 1 0-3.59 3.615L22 22Z"/></svg>',
+    repost: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19.998 9.497a1 1 0 0 0-1 1v4.228a3.274 3.274 0 0 1-3.27 3.27h-5.313l1.791-1.787a1 1 0 0 0-1.412-1.416L7.29 18.287a1.004 1.004 0 0 0-.294.707v.001c0 .023.012.042.013.065a.923.923 0 0 0 .281.643l3.502 3.504a1 1 0 0 0 1.414-1.414l-1.797-1.798h5.318a5.276 5.276 0 0 0 5.27-5.27v-4.228a1 1 0 0 0-1-1Zm-6.41-3.496-1.795 1.795a1 1 0 1 0 1.414 1.414l3.5-3.5a1.003 1.003 0 0 0 0-1.417l-3.5-3.5a1 1 0 0 0-1.414 1.414l1.794 1.794H8.27A5.277 5.277 0 0 0 3 9.271V13.5a1 1 0 0 0 2 0V9.271a3.275 3.275 0 0 1 3.271-3.27Z"/></svg>',
+    share: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13.973 20.046 21.77 6.928C22.8 5.195 21.55 3 19.535 3H4.466C2.138 3 .984 5.825 2.646 7.456l4.842 4.752 1.723 7.121c.548 2.266 3.571 2.721 4.762.717Z"/><line x1="7.488" x2="15.515" y1="12.208" y2="7.641"/></svg>',
+    save: '<svg class="igc-save-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="20 21 12 13.44 4 21 4 3 20 3 20 21"/></svg>' +
+          '<svg class="igc-save-on" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><polygon points="20 21 12 13.44 4 21 4 3 20 3 20 21"/></svg>',
+    more: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/><circle cx="5" cy="12" r="1.5"/></svg>',
+    prev: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>',
+    next: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>',
+    burst: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16.792 1.904a6.04 6.04 0 0 0-4.797 2.127 6.052 6.052 0 0 0-4.787-2.127A6.985 6.985 0 0 0 .5 9.122c0 3.61 2.55 5.827 5.015 7.97.283.246.569.494.853.747l1.027.918a44.998 44.998 0 0 0 3.518 3.018 2 2 0 0 0 2.174 0 45.263 45.263 0 0 0 3.626-3.115l.922-.824c.293-.26.59-.519.885-.774 2.334-2.025 4.98-4.32 4.98-7.94a6.985 6.985 0 0 0-6.708-7.218Z"/></svg>',
+    verified: '<svg class="igc-verified" viewBox="0 0 40 40" role="img" aria-label="Verified"><path fill="#0095f6" d="M19.998 3.094 14.638 0l-2.972 5.15H5.432v6.354L0 14.64 3.094 20 0 25.359l5.432 3.137v5.905h5.975L14.638 40l5.36-3.094L25.358 40l3.232-5.6h6.162v-6.01L40 25.359 36.905 20 40 14.641l-5.248-3.03v-6.46h-6.419L25.358 0l-5.36 3.094Z"/><path fill="#fff" d="m17.42 26.53-6.06-6.06 2.12-2.12 3.94 3.94 8.68-8.68 2.12 2.12z"/></svg>',
     soundOff: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 9v6h4l5 4V5L7 9H3z"/><path d="m16 9 5 6m0-6-5 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
     soundOn: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 9v6h4l5 4V5L7 9H3z"/><path d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>'
   };
@@ -371,40 +378,49 @@
     this.posts = posts;
     this.key = key;
     this.countTargets = [];
+    this.active = 0;
     this.root = el('div', 'igc');
-    this.build();
     mount(this.root);
+    this.build();
   }
 
   Carousel.prototype.build = function () {
     var o = this.o, root = this.root, self = this;
+    var focus = o.layout !== 'row';
     root.setAttribute('role', 'region');
     root.setAttribute('aria-roledescription', 'carousel');
     root.setAttribute('aria-label', (o.account ? o.account + ' ' : '') + 'posts');
+    root.setAttribute('data-layout', focus ? 'focus' : 'row');
     root.setAttribute('data-theme', o.theme);
     root.setAttribute('data-heart-animation', reduceMotion ? 'none' : o.heartAnimation);
     root.setAttribute('data-caption-expand', String(!!o.captionExpand));
     root.style.setProperty('--igc-ratio', o._ratio || '4 / 5');
+    root.style.setProperty('--igc-caption-lines', o.captionLines);
+    if (o.cardWidth) root.style.setProperty('--igc-card-width', /^\d+$/.test(String(o.cardWidth)) ? o.cardWidth + 'px' : o.cardWidth);
     root.style.setProperty('--igc-per-view', o.perView);
     root.style.setProperty('--igc-per-view-tablet', o.perViewTablet);
     root.style.setProperty('--igc-per-view-mobile', o.perViewMobile);
-    root.style.setProperty('--igc-caption-lines', o.captionLines);
     if (this.posts.length < o.perView) root.setAttribute('data-centered', 'true');
 
     var vp = this.viewport = el('div', 'igc-viewport');
     vp.tabIndex = 0;
-    this.posts.forEach(function (p, i) { vp.appendChild(self.renderPost(p, i)); });
+    vp.setAttribute('aria-label', 'Use left and right arrow keys to change post');
+    vp.style.position = 'relative';      // so post.offsetLeft is measured from the track
     root.appendChild(vp);
+    this.cards = this.posts.map(function (p, i) {
+      var card = self.renderPost(p, i);
+      vp.appendChild(card);
+      return card;
+    });
 
-    this.prevBtn = el('button', 'igc-arrow igc-arrow--prev', ICON.prev);
-    this.nextBtn = el('button', 'igc-arrow igc-arrow--next', ICON.next);
-    this.prevBtn.type = this.nextBtn.type = 'button';
-    this.prevBtn.setAttribute('aria-label', 'Previous post');
-    this.nextBtn.setAttribute('aria-label', 'Next post');
-    this.prevBtn.addEventListener('click', function () { self.step(-1); });
-    this.nextBtn.addEventListener('click', function () { self.step(1); });
-    root.appendChild(this.prevBtn);
-    root.appendChild(this.nextBtn);
+    if (!focus) {   // row layout: arrows on the carousel edges
+      this.prevBtn = this.arrow('prev', 'igc-arrow--edge');
+      this.nextBtn = this.arrow('next', 'igc-arrow--edge');
+      this.prevBtn.style.left = '-20px';
+      this.nextBtn.style.right = '-20px';
+      root.appendChild(this.prevBtn);
+      root.appendChild(this.nextBtn);
+    }
 
     vp.addEventListener('scroll', function () { self.queue(); }, { passive: true });
     window.addEventListener('resize', function () { self.queue(); });
@@ -413,8 +429,23 @@
       if (e.key === 'ArrowRight') { e.preventDefault(); self.step(1); }
       if (e.key === 'ArrowLeft') { e.preventDefault(); self.step(-1); }
     });
+    // focus layout: tapping a faded side post brings it to the centre
+    vp.addEventListener('click', function (e) {
+      if (!focus) return;
+      var card = e.target.closest('.igc-post');
+      if (card && !card.classList.contains('is-active')) { e.preventDefault(); self.goTo(self.cards.indexOf(card)); }
+    }, true);
     this.observe();
-    setTimeout(function () { self.update(); }, 0);
+    this.update();
+  };
+
+  Carousel.prototype.arrow = function (dir, extra) {
+    var self = this;
+    var b = el('button', 'igc-arrow igc-arrow--' + dir + (extra ? ' ' + extra : ''), ICON[dir]);
+    b.type = 'button';
+    b.setAttribute('aria-label', dir === 'prev' ? 'Previous post' : 'Next post');
+    b.addEventListener('click', function (e) { e.stopPropagation(); self.step(dir === 'prev' ? -1 : 1); });
+    return b;
   };
 
   Carousel.prototype.queue = function () {
@@ -423,24 +454,48 @@
     this._raf = requestAnimationFrame(function () { self._raf = 0; self.update(); });
   };
 
+  /* Which post is "current": the one nearest the centre (focus) or the left edge (row). */
   Carousel.prototype.update = function () {
     var vp = this.viewport;
-    var max = vp.scrollWidth - vp.clientWidth;
-    this.prevBtn.disabled = vp.scrollLeft <= 2;
-    this.nextBtn.disabled = vp.scrollLeft >= max - 2;
+    var focus = this.o.layout !== 'row';
+    var ref = focus ? vp.scrollLeft + vp.clientWidth / 2 : vp.scrollLeft;
+    var best = 0, bestD = Infinity;
+    this.cards.forEach(function (c, i) {
+      var pos = focus ? c.offsetLeft + c.offsetWidth / 2 : c.offsetLeft;
+      var d = Math.abs(pos - ref);
+      if (d < bestD) { bestD = d; best = i; }
+    });
+    if (best !== this.active || !this._updated) {
+      this._updated = true;
+      this.active = best;
+      this.cards.forEach(function (c, i) {
+        c.classList.toggle('is-active', i === best);
+        c.setAttribute('aria-hidden', focus && i !== best ? 'true' : 'false');
+      });
+      var self = this;
+      this.cards.forEach(function (c) { self.playVisible($('.igc-media-track', c)); });
+    }
+    if (this.prevBtn) {
+      var max = vp.scrollWidth - vp.clientWidth;
+      this.prevBtn.disabled = vp.scrollLeft <= 2;
+      this.nextBtn.disabled = vp.scrollLeft >= max - 2;
+    }
   };
 
-  Carousel.prototype.step = function (dir) {
+  Carousel.prototype.goTo = function (i) {
     var vp = this.viewport;
-    var card = vp.children[0];
+    var card = this.cards[Math.max(0, Math.min(this.cards.length - 1, i))];
     if (!card) return;
-    var gap = parseFloat(getComputedStyle(vp).columnGap) || 0;
-    vp.scrollBy({ left: dir * (card.getBoundingClientRect().width + gap), behavior: reduceMotion ? 'auto' : 'smooth' });
+    var left = this.o.layout === 'row' ? card.offsetLeft : card.offsetLeft - (vp.clientWidth - card.offsetWidth) / 2;
+    vp.scrollTo({ left: left, behavior: reduceMotion ? 'auto' : 'smooth' });
   };
+
+  Carousel.prototype.step = function (dir) { this.goTo(this.active + dir); };
 
   Carousel.prototype.renderPost = function (p, index) {
     var o = this.o, self = this;
     var m = p.meta || {};
+    var total = this.posts.length;
     var account = m.account || o.account || '';
     var avatar = m.avatar || o.avatar || '';
     var profile = m.profile || o.profile || '';
@@ -449,13 +504,13 @@
 
     var art = el('article', 'igc-post');
     art.setAttribute('aria-roledescription', 'slide');
-    art.setAttribute('aria-label', 'Post ' + (index + 1) + ' of ' + this.posts.length);
+    art.setAttribute('aria-label', 'Post ' + (index + 1) + ' of ' + total);
 
-    /* header */
+    /* ---- header: avatar + account name ---- */
     var head = el('header', 'igc-head');
     var av = el('div', 'igc-avatar');
     av.setAttribute('data-ring', String(!!o.avatarRing));
-    av.innerHTML = avatar ? '<img src="' + esc(avatar) + '" alt="" loading="lazy">' : '<span>' + esc(account.charAt(0) || '•') + '</span>';
+    av.innerHTML = avatar ? '<img src="' + esc(sized(avatar, 300)) + '" alt="" loading="lazy">' : '<span>' + esc(account.charAt(0) || '•') + '</span>';
     var who = el('div', 'igc-who');
     var nameTag = profile ? 'a' : 'span';
     who.innerHTML = '<' + nameTag + ' class="igc-account"' + (profile ? ' href="' + esc(profile) + '" target="_blank" rel="noopener"' : '') + '>' +
@@ -463,20 +518,20 @@
       (loc ? '<span class="igc-location">' + esc(loc) + '</span>' : '');
     var more = el('button', 'igc-more', ICON.more);
     more.type = 'button';
-    more.setAttribute('aria-label', 'More options');
     more.tabIndex = -1;
+    more.setAttribute('aria-hidden', 'true');
     head.appendChild(av);
     head.appendChild(who);
     head.appendChild(more);
     art.appendChild(head);
 
-    /* media */
+    /* ---- media: this post's own photo/video gallery ---- */
     var media = el('div', 'igc-media');
     var track = el('div', 'igc-media-track');
     var hasVideo = false;
     p.slides.forEach(function (s, i) {
       var slide = el('div', 'igc-slide');
-      slide.setAttribute('aria-label', (i + 1) + ' of ' + p.slides.length);
+      slide.setAttribute('aria-label', 'Photo ' + (i + 1) + ' of ' + p.slides.length);
       if (s.type === 'image') {
         slide.appendChild(buildImg(s.url, s.alt, s.focal));
       } else if (s.type === 'video') {
@@ -512,16 +567,29 @@
     media.appendChild(track);
     var n = p.slides.length;
 
-    var counter = null, dots = null, innerPrev = null, innerNext = null;
+    /* mid-image arrows switch POSTS (focus layout) */
+    if (o.layout !== 'row' && total > 1) {
+      var pa = this.arrow('prev'), na = this.arrow('next');
+      if (index === 0) pa.hidden = true;
+      if (index === total - 1) na.hidden = true;
+      media.appendChild(pa);
+      media.appendChild(na);
+    }
+
+    /* dots switch PHOTOS inside this post — never the carousel */
+    var counter = null, dots = null;
     if (n > 1) {
       if (o.showCounter) { counter = el('span', 'igc-counter', '1/' + n); media.appendChild(counter); }
-      innerPrev = el('button', 'igc-inner-arrow igc-inner-arrow--prev', ICON.prev);
-      innerNext = el('button', 'igc-inner-arrow igc-inner-arrow--next', ICON.next);
-      innerPrev.type = innerNext.type = 'button';
-      innerPrev.setAttribute('aria-label', 'Previous photo');
-      innerNext.setAttribute('aria-label', 'Next photo');
-      media.appendChild(innerPrev);
-      media.appendChild(innerNext);
+      dots = el('div', 'igc-dots');
+      for (var d = 0; d < n; d++) {
+        var dot = el('button', 'igc-dot');
+        dot.type = 'button';
+        dot.setAttribute('aria-label', 'Show photo ' + (d + 1) + ' of ' + n);
+        dot.setAttribute('aria-current', d === 0 ? 'true' : 'false');
+        (function (i) { dot.addEventListener('click', function (e) { e.stopPropagation(); goSlide(i); }); })(d);
+        dots.appendChild(dot);
+      }
+      media.appendChild(dots);
     }
     if (hasVideo) {
       media.setAttribute('data-video', 'true');
@@ -542,12 +610,20 @@
     media.appendChild(burst);
     art.appendChild(media);
 
-    /* actions */
+    /* ---- action row: heart · comment · repost · share ......... save ---- */
     var actions = el('div', 'igc-actions');
     var like = el('button', 'igc-action igc-like', ICON.heart);
     like.type = 'button';
     like.setAttribute('aria-label', 'Like');
     like.setAttribute('aria-pressed', 'false');
+    var count = o.showLikes ? parseCount(m.likes) : null;
+    var countEl = null;
+    if (count) {
+      countEl = el('span', 'igc-count');
+      countEl.setAttribute('data-target', count.n);
+      countEl.innerHTML = '<span>' + formatCount(o.countUp && !reduceMotion ? 0 : count.n, count.compact) + '</span>';
+      if (o.countUp && !reduceMotion) this.countTargets.push({ el: countEl, compact: count.compact });
+    }
     var comment = el(m.link ? 'a' : 'button', 'igc-action igc-comment', ICON.comment);
     if (m.link) { comment.href = m.link; comment.target = '_blank'; comment.rel = 'noopener'; } else comment.type = 'button';
     comment.setAttribute('aria-label', 'Comment');
@@ -555,6 +631,7 @@
     var repost = el('button', 'igc-action igc-repost', ICON.repost);
     repost.type = 'button';
     repost.setAttribute('aria-label', 'Repost');
+    repost.setAttribute('aria-pressed', 'false');
     var share = el('button', 'igc-action igc-share', ICON.share);
     share.type = 'button';
     share.setAttribute('aria-label', 'Share');
@@ -562,37 +639,20 @@
     save.type = 'button';
     save.setAttribute('aria-label', 'Save');
     save.setAttribute('aria-pressed', 'false');
-    [like, comment, repost, share].forEach(function (b) { actions.appendChild(b); });
-
-    if (n > 1) {
-      dots = el('div', 'igc-dots');
-      dots.setAttribute('role', 'tablist');
-      for (var d = 0; d < n; d++) {
-        var dot = el('button', 'igc-dot');
-        dot.type = 'button';
-        dot.setAttribute('aria-label', 'Show photo ' + (d + 1) + ' of ' + n);
-        dot.setAttribute('aria-current', d === 0 ? 'true' : 'false');
-        (function (i) { dot.addEventListener('click', function () { goSlide(i); }); })(d);
-        dots.appendChild(dot);
-      }
-      actions.appendChild(dots);
-    }
-    actions.appendChild(save);
+    [like, comment, repost, share, save].forEach(function (b) { actions.appendChild(b); });
     art.appendChild(actions);
 
-    /* body */
+    /* ---- text: likes line (optional) + clipped caption ---- */
     var body = el('div', 'igc-body');
-    var count = parseCount(m.likes);
-    var countEl = null;
-    if (o.showLikes && count) {
-      var likesRow = el('div', 'igc-likes');
-      countEl = el('span', 'igc-count');
-      countEl.innerHTML = '<span>' + formatCount(o.countUp && !reduceMotion ? 0 : count.n, count.compact) + '</span>';
-      countEl.setAttribute('data-target', count.n);
-      likesRow.appendChild(countEl);
-      likesRow.appendChild(document.createTextNode(count.n === 1 ? ' like' : ' likes'));
-      body.appendChild(likesRow);
-      if (o.countUp && !reduceMotion) this.countTargets.push({ el: countEl, n: count.n, compact: count.compact });
+    if (countEl) {
+      if (o.likesStyle === 'line') {
+        var likesRow = el('div', 'igc-likes');
+        likesRow.appendChild(countEl);
+        likesRow.appendChild(document.createTextNode(count.n === 1 ? ' like' : ' likes'));
+        body.appendChild(likesRow);
+      } else {
+        like.appendChild(countEl);
+      }
     }
     if (p.caption) {
       var cap = el('p', 'igc-caption');
@@ -601,26 +661,24 @@
       body.appendChild(cap);
     }
     if (o.showDate && m.date) body.appendChild(el('div', 'igc-meta', esc(m.date)));
-    art.appendChild(body);
+    if (body.children.length) art.appendChild(body);
+    else actions.style.paddingBottom = '14px';
 
     /* ---- behaviour ---- */
-    var current = 0;
+    var current = -1;
     function goSlide(i) {
       i = Math.max(0, Math.min(n - 1, i));
       track.scrollTo({ left: i * track.clientWidth, behavior: reduceMotion ? 'auto' : 'smooth' });
     }
     function syncSlide() {
       var i = Math.round(track.scrollLeft / Math.max(1, track.clientWidth));
-      if (i === current && track._igcSynced) return;
-      track._igcSynced = true;
+      if (i === current) return;
       current = i;
       if (counter) counter.textContent = (i + 1) + '/' + n;
       if (dots) $$('.igc-dot', dots).forEach(function (dd, k) {
         dd.setAttribute('aria-current', k === i ? 'true' : 'false');
         dd.setAttribute('data-far', Math.abs(k - i) > 2 ? 'true' : 'false');
       });
-      if (innerPrev) innerPrev.disabled = i === 0;
-      if (innerNext) innerNext.disabled = i === n - 1;
       self.playVisible(track);
     }
     var raf = 0;
@@ -628,14 +686,11 @@
       if (raf) return;
       raf = requestAnimationFrame(function () { raf = 0; syncSlide(); });
     }, { passive: true });
-    if (innerPrev) innerPrev.addEventListener('click', function () { goSlide(current - 1); });
-    if (innerNext) innerNext.addEventListener('click', function () { goSlide(current + 1); });
-    setTimeout(syncSlide, 0);
+    syncSlide();
 
-    var liked = o.rememberLikes && store(postKey + ':like') === '1';
+    var liked = false;
     function setLiked(on, animate) {
-      if (on === liked && animate) return;
-      var was = liked;
+      if (on === liked) return;
       liked = on;
       like.classList.toggle('is-liked', on);
       like.setAttribute('aria-pressed', String(on));
@@ -646,21 +701,22 @@
         void like.offsetWidth;
         like.classList.add('is-pop');
       }
-      if (countEl && was !== on) {
+      if (countEl) {
         var target = +countEl.getAttribute('data-target') + (on ? 1 : -1);
         countEl.setAttribute('data-target', target);
-        self.setCount(countEl, target, count.compact, animate ? (on ? 'up' : 'down') : null);
+        if (animate) self.setCount(countEl, target, count.compact, on ? 'up' : 'down');
       }
     }
-    if (liked) {
-      liked = false;
-      setLiked(true, false);
-    }
+    if (o.rememberLikes && store(postKey + ':like') === '1') setLiked(true, false);
     like.addEventListener('click', function () { setLiked(!liked, true); });
 
     if (o.doubleTapLike) {
       var lastTap = 0;
-      media.addEventListener('dblclick', function (e) { e.preventDefault(); heartBurst(); });
+      media.addEventListener('dblclick', function (e) {
+        if (e.target.closest('button')) return;
+        e.preventDefault();
+        heartBurst();
+      });
       media.addEventListener('touchend', function (e) {
         if (e.target.closest('button, a')) return;
         var now = Date.now();
@@ -675,18 +731,22 @@
       burst.classList.add('is-on');
     }
 
-    var saved = o.rememberLikes && store(postKey + ':save') === '1';
+    var saved = false;
     function setSaved(on) {
       saved = on;
       save.classList.toggle('is-saved', on);
       save.setAttribute('aria-pressed', String(on));
       if (o.rememberLikes) store(postKey + ':save', on ? '1' : null);
     }
-    if (saved) setSaved(true);
+    if (o.rememberLikes && store(postKey + ':save') === '1') setSaved(true);
     save.addEventListener('click', function () { setSaved(!saved); });
-    repost.addEventListener('click', function () { repost.classList.toggle('is-reposted'); });
+    repost.addEventListener('click', function () {
+      var on = !repost.classList.contains('is-reposted');
+      repost.classList.toggle('is-reposted', on);
+      repost.setAttribute('aria-pressed', String(on));
+    });
     share.addEventListener('click', function () {
-      var url = m.link ? new URL(m.link, location.href).href : location.href.split('#')[0] + (self.o._anchor ? '#' + self.o._anchor : '');
+      var url = m.link ? new URL(m.link, window.location.href).href : window.location.href.split('#')[0] + (o._anchor ? '#' + o._anchor : '');
       if (navigator.share) { navigator.share({ title: account, text: p.caption, url: url }).catch(function () {}); return; }
       if (navigator.clipboard) navigator.clipboard.writeText(url).then(function () {
         share.setAttribute('aria-label', 'Link copied');
@@ -715,24 +775,23 @@
   Carousel.prototype.observe = function () {
     var self = this;
     if (!('IntersectionObserver' in window)) {
-      this.countTargets.forEach(function (t) { t.el.innerHTML = '<span>' + formatCount(t.n, t.compact) + '</span>'; });
+      this.countTargets.forEach(function (t) { t.el.innerHTML = '<span>' + formatCount(+t.el.getAttribute('data-target'), t.compact) + '</span>'; });
       $$('.igc-media-track', this.root).forEach(function (t) { self.playVisible(t); });
       return;
     }
+    // every like count in the carousel counts up together when it scrolls into view
+    var countIo = new IntersectionObserver(function (entries) {
+      if (!entries[0].isIntersecting) return;
+      countIo.disconnect();
+      self.countTargets.forEach(function (t) { self.countUp(t); });
+    }, { threshold: 0.25 });
+    countIo.observe(this.root);
+
     var io = new IntersectionObserver(function (entries) {
       entries.forEach(function (e) {
         var track = $('.igc-media-track', e.target);
-        if (e.isIntersecting) {
-          self.playVisible(track);
-          var countEl = $('.igc-count', e.target);
-          self.countTargets.forEach(function (t) {
-            if (t.el !== countEl || t.done) return;
-            t.done = true;
-            self.countUp(t);
-          });
-        } else {
-          $$('video', track).forEach(function (v) { v.pause(); });
-        }
+        if (e.isIntersecting) self.playVisible(track);
+        else $$('video', track).forEach(function (v) { v.pause(); });
       });
     }, { threshold: 0.35 });
     $$('.igc-post', this.root).forEach(function (p) { io.observe(p); });
@@ -756,10 +815,11 @@
     var w = Math.max(1, track.clientWidth);
     var i = Math.round(track.scrollLeft / w);
     var post = track.closest('.igc-post');
-    var onScreen = post && (function () {
+    var onScreen = false;
+    if (post && (this.o.layout === 'row' || post.classList.contains('is-active'))) {
       var r = post.getBoundingClientRect(), vr = this.viewport.getBoundingClientRect();
-      return r.right > vr.left + 20 && r.left < vr.right - 20 && r.bottom > 0 && r.top < window.innerHeight;
-    }).call(this);
+      onScreen = r.right > vr.left + 20 && r.left < vr.right - 20 && r.bottom > 0 && r.top < window.innerHeight;
+    }
     $$('.igc-slide', track).forEach(function (s, k) {
       $$('video', s).forEach(function (v) {
         if (k === i && onScreen) { var pr = v.play(); if (pr && pr.catch) pr.catch(function () {}); }
