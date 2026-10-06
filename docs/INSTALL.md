@@ -134,14 +134,32 @@ Uses the Will Myers Slider Pro pattern: a code block pulls in the sections below
 5. Each section below can be:
    - a **Grid gallery section** → photos (first image = profile when `first-image` is on)
    - a **blank Fluid Engine section** with **image blocks**, **video blocks**, code blocks
-     with `<video src="…mp4" muted loop playsinline></video>`, and optionally one
-     **text block** for the caption (used when the code block has no line for that post).
-     Blocks are read top to bottom, then left to right.
+     with `<video src="…mp4" muted loop playsinline></video>`, and optionally a
+     **text block** for the post text. Blocks are read top to bottom, then left to right.
+6. **Video posts:** a blank section holding just a **Video block** (uploaded video) is a
+   video post. The carousel plays the video's own stream muted and looping while the
+   post is centred, uses its thumbnail as the poster, and shows the mute button. The
+   video block's own autoplay/controls settings are ignored. Its **description** is
+   the post text, using the formatting rules below.
+
+### Post text formatting (text blocks, video descriptions, code-block lines)
+
+| Write it as | Becomes |
+|---|---|
+| **Bold** text | Account name for this post |
+| *Italic* text | Line under the account name (location) |
+| A link to an image (Squarespace image or video-thumbnail URL, or `.jpg/.png/.webp`) | Profile picture for this post. The link text is not shown |
+| Any other link | Where the comment icon links. The link text is not shown |
+| Everything else | Caption |
+
+Only the first bold and first italic are used. To get the image URL, open the image or
+video thumbnail on the live site and copy its address.
 
 ### Post details
 
-In any caption (list description, code block line, text block), lines shaped
-`key: value` are pulled out and the rest is the caption:
+In any caption (list description, code block line, text block, video description),
+lines shaped `key: value` are pulled out and the rest is the caption. List item
+descriptions don't use the bold/italic rules above.
 
 | Key | Effect |
 |---|---|
@@ -330,12 +348,14 @@ The plugin watches `body.class` for `sqs-edit-mode-active` and tears down or reb
 | Text looks too spaced out | Set `--igc-letter-spacing: normal` (default). If a template rule still wins, add it on `#anchor .igc`. |
 | Photo order wrong (blank sections) | Blocks read top to bottom, then left to right. Nudge them in Fluid Engine. |
 | Video looks cropped | Videos fill the frame. Use a matching ratio, e.g. `9:16` for reels. |
+| Video shows only its poster | Check the browser console. Non-Safari browsers load hls.js from cdn.jsdelivr.net, so a blocker on that domain stops playback. |
+| Bold words in a caption became the account name | In text blocks, video descriptions and code-block lines, the first bold text is the account name. Don't use bold for emphasis there. |
 
 ## Deployed on
 
 | Site | Methods | Notes |
 |---|---|---|
-| swtldesignco.com/carousel-test-1 (staging) | A, C | v1.0 installed. v1.1 tested by injecting it into the live page: list → 4 posts (20px native gap); code block + 3 Grid galleries with `first-image` → 3 posts with their own profile (SWTL Design Co, Physiq, fallback), captions from the code block, 30.72px native gap. No errors. |
+| swtldesignco.com/carousel-test-1 (staging) | A, C | v1.0 installed. Video-block post (v1.1): bold/italic/image-link description → name, location, avatar; HLS stream attached. Earlier: v1.1 tested by injecting it into the live page: list → 4 posts (20px native gap); code block + 3 Grid galleries with `first-image` → 3 posts with their own profile (SWTL Design Co, Physiq, fallback), captions from the code block, 30.72px native gap. No errors. |
 
 ## Open items
 
@@ -350,6 +370,10 @@ The plugin watches `body.class` for `sqs-edit-mode-active` and tears down or reb
 - **Still unverified:** `.sqs-block-video` / `.sqs-block-image` inside blank-section posts,
   the editor class `body.sqs-edit-mode-active`, and which gallery editor field writes
   the alt text.
-- Whether moving a **native Squarespace video block** into a slide keeps its player working.
+- **Native video blocks** (website-component `.sqs-native-video[data-config-video]`) are rebuilt
+  as a plain `<video>` on the block's HLS stream (`…/playlist.m3u8`, poster `…/thumbnail`).
+  Squarespace serves no MP4 for them. Stream attach verified on staging; actual playback
+  not verifiable in the headless test browser (no H.264), so confirm in Chrome and Safari.
+- YouTube/Vimeo video blocks are still moved into the slide as-is (untested).
 - `aspect: 'native'` on gallery posts measures the first photo tile (skips the profile image).
 - **Release:** v1.1.0 needs a `v1.1.0` release tag on `main` for `@1` to pick it up.

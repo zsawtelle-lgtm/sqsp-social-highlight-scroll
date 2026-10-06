@@ -188,6 +188,34 @@
     return c.textContent;
   }
 
+  function isImageUrl(url) {
+    return /\.(jpe?g|png|gif|webp|avif)(\?|#|$)/i.test(url) || /images\.squarespace-cdn\.com|\/thumbnail(\?|$)/.test(url);
+  }
+
+  /* Formatted post text (text blocks, video descriptions, code-block lines):
+       bold          → account name
+       italic        → line under the account name (location)
+       link → image  → profile picture
+       other link    → where the comment icon links
+     The rest is the caption ("key: value" lines still work). */
+  function parseRich(node) {
+    if (!node) return parseText(null);
+    var c = node.cloneNode(true);
+    var meta = {};
+    var bold = $('strong, b', c);
+    if (bold) { meta.account = bold.textContent.trim(); bold.remove(); }
+    var ital = $('em, i', c);
+    if (ital) { meta.location = ital.textContent.trim(); ital.remove(); }
+    $$('a[href]', c).forEach(function (a) {
+      var href = a.getAttribute('href');
+      if (isImageUrl(href)) { if (!meta.avatar) meta.avatar = href; } else if (!meta.link) meta.link = href;
+      a.remove();
+    });
+    var t = parseText(c);
+    Object.keys(meta).forEach(function (k) { if (meta[k] && !t.meta[k]) t.meta[k] = meta[k]; });
+    return t;
+  }
+
   /* "location: Boston" lines become meta; everything else is the caption. */
   function parseText(node) {
     var meta = {};
@@ -259,6 +287,19 @@
     }
     if (block.classList.contains('sqs-block-gallery')) {
       return galleryItems(block);
+    }
+    var native = block.classList.contains('sqs-block-video') && $('.sqs-native-video[data-config-video]', block);
+    if (native) {
+      var cfg = {};
+      try { cfg = JSON.parse(native.getAttribute('data-config-video')); } catch (e) { cfg = {}; }
+      if (cfg.alexandriaUrl) {
+        return [{
+          type: 'hls',
+          url: cfg.alexandriaUrl.replace('{variant}', 'playlist.m3u8'),
+          poster: cfg.alexandriaUrl.replace('{variant}', 'thumbnail'),
+          text: $('.video-caption', block)
+        }];
+      }
     }
     if (block.classList.contains('sqs-block-video') || block.classList.contains('sqs-block-embed')) {
       return [{ type: 'block', node: $('.sqs-block-content', block) || block, video: true }];
@@ -332,10 +373,13 @@
     blocks.forEach(function (o) {
       var b = o.b;
       if (b.classList.contains('sqs-block-html') || b.classList.contains('sqs-block-markdown')) {
-        texts.push(parseText($('.sqs-block-content', b) || b));
+        texts.push(parseRich($('.sqs-block-content', b) || b));
         return;
       }
-      mediaFromBlock(b).forEach(function (m) { post.slides.push(m); });
+      mediaFromBlock(b).forEach(function (m) {
+        if (m.text) texts.push(parseRich(m.text));   // video block description
+        post.slides.push(m);
+      });
     });
     texts.forEach(function (t) {
       if (t.caption) post.caption += (post.caption ? '\n' : '') + t.caption;
@@ -565,6 +609,18 @@
         if (s.poster) v.poster = sized(s.poster, 1000);
         slide.appendChild(v);
         hasVideo = true;
+      } else if (s.type === 'hls') {
+        var hv = el('video');
+        hv.muted = true;
+        hv.loop = true;
+        hv.playsInline = true;
+        hv.setAttribute('playsinline', '');
+        hv.setAttribute('muted', '');
+        hv.preload = 'none';
+        hv.poster = s.poster;
+        hv.setAttribute('data-hls', s.url);   // stream attached on first play
+        slide.appendChild(hv);
+        hasVideo = true;
       } else if (s.type === 'embed') {
         var src = embedUrl(s.url);
         if (src) {
@@ -781,11 +837,50 @@
     }
     $$('.igc-slide', track).forEach(function (s, k) {
       $$('video', s).forEach(function (v) {
-        if (k === i && onScreen) { var pr = v.play(); if (pr && pr.catch) pr.catch(function () {}); }
+        if (k === i && onScreen) {
+          attachStream(v).then(function () { var pr = v.play(); if (pr && pr.catch) pr.catch(function () {}); });
+        }
         else v.pause();
       });
     });
   };
+
+  /* Squarespace-hosted videos are HLS streams. Safari plays them natively;
+     other browsers get hls.js, loaded from jsDelivr only when needed. */
+  var HLS_SRC = 'https://cdn.jsdelivr.net/npm/hls.js@1/dist/hls.min.js';
+  var hlsLoading = null;
+  function loadHls() {
+    if (window.Hls) return Promise.resolve(window.Hls);
+    if (!hlsLoading) {
+      hlsLoading = new Promise(function (resolve, reject) {
+        var sc = document.createElement('script');
+        sc.src = HLS_SRC;
+        sc.async = true;
+        sc.onload = function () { resolve(window.Hls); };
+        sc.onerror = reject;
+        document.head.appendChild(sc);
+      });
+    }
+    return hlsLoading;
+  }
+  function attachStream(v) {
+    var url = v.getAttribute('data-hls');
+    if (!url) return Promise.resolve();
+    if (v._igcStream) return v._igcStream;
+    if (v.canPlayType('application/vnd.apple.mpegurl')) {
+      v.src = url;
+      v._igcStream = Promise.resolve();
+    } else {
+      v._igcStream = loadHls().then(function (Hls) {
+        if (!Hls || !Hls.isSupported()) return;
+        var hls = new Hls({ capLevelToPlayerSize: true });
+        hls.loadSource(url);
+        hls.attachMedia(v);
+        v._igcHls = hls;
+      }).catch(function () {});
+    }
+    return v._igcStream;
+  }
 
   /* --------------------------------------------------------- Bootstrap */
   var instances = [];
@@ -896,7 +991,7 @@
         o._ratio = measureRatio(tiles[o.avatar === 'first-image' && tiles.length > 1 ? 1 : 0]);
       }
       o._gap = nativeGap($('.gallery-grid-wrapper', sources[0])) || galleryGutter($('.gallery-grid[data-gutter]', sources[0]));
-      var captions = t.code ? $$('p, li', t.code).map(parseText) : [];
+      var captions = t.code ? $$('p, li', t.code).map(function (n) { return parseRich(n); }) : [];
       posts = sources.map(function (src, i) {
         var post = postFromSection(src, o);
         var c = captions[i];
@@ -928,6 +1023,7 @@
   function destroy() {
     instances.forEach(function (inst) {
       inst.hidden.forEach(function (h) { h.classList.remove('igc-source-hidden'); });
+      $$('video', inst.carousel.root).forEach(function (v) { if (v._igcHls) v._igcHls.destroy(); });
       if (inst.carousel.root.parentNode) inst.carousel.root.parentNode.removeChild(inst.carousel.root);
     });
     moved.forEach(function (pair) {
