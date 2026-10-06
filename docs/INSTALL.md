@@ -57,7 +57,7 @@ Pick a build method per carousel. All three can be used on the same page.
 | Method | Best for | Photos per post | Video |
 |---|---|---|---|
 | **A. Auto Layout list** | Quick single-photo posts, all editing in one panel | several (`+` items) | `video:` line |
-| **B. Anchor + gallery sections** | Existing photo galleries | unlimited | — |
+| **B. Anchor + gallery sections** | Existing photo galleries (**Grid layout only**) | unlimited | — |
 | **C. Code block + blank sections** | **Mixed photo + video posts** | unlimited | native video blocks |
 
 The original sections stay visible **in the editor** so they can be edited. The
@@ -85,7 +85,7 @@ carousel only renders on the live site.
 
 1. Give the section that will hold the carousel the anchor `ig-carousel-2`. A
    heading block in it can stay.
-2. Directly below, add **Gallery sections**. **One gallery section = one post.**
+2. Directly below, add **Gallery sections** set to the **Grid** layout (Simple Grid). **One gallery section = one post.** Masonry, slideshow, reel and strips layouts are not supported and are skipped.
 3. Collection stops at the first section below that isn't a gallery.
 4. Caption and likes: write them in the **first image's description**, e.g.
    `This is such a cool gallery! ❤️` then a new line `likes: 325`.
@@ -280,7 +280,8 @@ The plugin watches `body.class` for `sqs-edit-mode-active` and tears down or reb
 | 404 on the CDN files | `@1` needs a `v1.x.x` tag on the repo (see Open items). |
 | Wrong sections pulled in | Method C: check `data-sections`. Method B: a non-gallery section between the anchor and the galleries stops collection. |
 | No account name/avatar | Set `account`/`avatar` globally or per carousel. |
-| Gallery post has no caption (B) | Some gallery layouts don't output captions. Rebuild that post with Method C. |
+| A gallery section is ignored | Only the **Grid** gallery layout is supported. Switch the section to Grid (the browser console logs a warning for skipped galleries). |
+| Gallery post has no caption (B) | Turn on captions for the grid, or rebuild that post with Method C. |
 | Photo order wrong (C) | Blocks read top to bottom, then left to right. Nudge them in Fluid Engine. |
 | Video looks cropped | Videos fill the frame. Use a matching ratio, e.g. `9:16` for reels. |
 
@@ -296,11 +297,11 @@ The plugin watches `body.class` for `sqs-edit-mode-active` and tears down or reb
   list classes `.user-items-list`, `.user-items-list-carousel__slide.list-item`,
   `.list-item-content__title/__description/__button`, `[data-media-aspect-ratio]`;
   gallery classes `.gallery-section`, `.gallery-grid-item`; images use `data-src`/`data-image`.
-- **Still unverified:** gallery layouts other than Grid (masonry/slideshow/reel/strips),
-  gallery image captions, `.sqs-block-video` / `.sqs-block-image` inside Fluid Engine posts,
+- **Scope decision:** gallery sections are supported in the **Grid** layout only.
+- **Still unverified:** Grid gallery image captions, `.sqs-block-video` / `.sqs-block-image` inside Fluid Engine posts,
   and the editor class `body.sqs-edit-mode-active`.
 - Whether moving a **native Squarespace video block** into a slide keeps its player working.
-- Video items inside **gallery sections** are not supported (read via `data-video-url` only).
+- Video inside gallery sections is not supported. Use Method C for video posts.
 - `aspect: 'native'` on gallery/Fluid Engine posts measures the first image container.
   Only verified on Grid galleries.
 - **Release tag:** after merging to `main`, tag `v1.0.0` so the `@1` jsDelivr URLs resolve.

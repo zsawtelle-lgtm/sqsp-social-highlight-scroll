@@ -12,8 +12,8 @@
                     the post above them.
 
    2. SECTION MODE  A section whose anchor id starts with "ig-carousel" but
-                    has no list in it. The gallery sections directly below it
-                    become the posts (one gallery section = one post).
+                    has no list in it. The Grid gallery sections directly below
+                    it become the posts (one gallery section = one post).
 
    3. CODE BLOCK    <div data-ig-carousel data-sections="3"></div> in a Code
                     Block. The next 3 sections become posts. Each can be a
@@ -271,29 +271,29 @@
     return [];
   }
 
+  /* Gallery sections: the Grid layout only (.gallery-grid-item). */
   function galleryItems(root) {
-    var seen = {};
+    var items = $$('.gallery-grid-item', root);
+    if (!items.length) items = $$('figure', root);   // gallery blocks inside Fluid Engine
     var out = [];
-    var items = $$('figure, .gallery-grid-item, .gallery-masonry-item, .gallery-slideshow-item, .gallery-reel-item, .gallery-fullscreen-slideshow-item, .gallery-strips-item, .slide', root);
-    if (!items.length) items = [root];
     items.forEach(function (item) {
       var img = $('img', item);
       var url = imageUrl(img);
       if (!url) return;
-      var key = url.split('?')[0];
-      if (seen[key]) return;   // slideshows clone slides for looping
-      seen[key] = true;
-      var cap = $('figcaption, .gallery-caption, .gallery-caption-content, .image-caption', item);
-      var vEl = item.hasAttribute && item.hasAttribute('data-video-url') ? item : $('[data-video-url]', item);
-      var videoLink = vEl ? vEl.getAttribute('data-video-url') : '';
-      out.push({ type: 'image', url: url, alt: img.alt, focal: img.getAttribute('data-image-focal-point'), caption: cap, videoUrl: videoLink });
+      out.push({
+        type: 'image', url: url, alt: img.alt,
+        focal: img.getAttribute('data-image-focal-point'),
+        caption: $('figcaption, .gallery-caption, .gallery-caption-content', item)
+      });
     });
     return out;
   }
 
   function isGallerySection(section) {
-    if (section.classList.contains('gallery-section')) return true;
-    return !$('.sqs-block', section) && !!$('[class*="gallery-grid"], [class*="gallery-masonry"], [class*="gallery-slideshow"], [class*="gallery-reel"], [class*="gallery-strips"], [class*="gallery-fullscreen"]', section);
+    if (!section.classList.contains('gallery-section')) return false;
+    if ($('.gallery-grid', section)) return true;
+    if (window.console) console.warn('[IG Carousel] Only Grid gallery layouts are supported. Skipping', section);
+    return false;
   }
 
   function postFromSection(section) {
@@ -305,7 +305,7 @@
           post.caption = t.caption;
           post.meta = t.meta;
         }
-        post.slides.push(it.videoUrl ? { type: isVideoUrl(it.videoUrl) ? 'video' : 'embed', url: it.videoUrl, poster: it.url } : it);
+        post.slides.push(it);
       });
       return post;
     }
@@ -903,7 +903,7 @@
       var count = o.sections === 'auto' ? 'auto' : Math.max(1, parseInt(o.sections, 10) || 1);
       var sources = nextSections(section, count);
       if (!sources.length) return;
-      if (o.aspect === 'native') o._ratio = measureRatio($('.gallery-grid-item, .gallery-masonry-item, .sqs-block-image .image-block-wrapper, figure', sources[0]));
+      if (o.aspect === 'native') o._ratio = measureRatio($('.gallery-grid-item, .sqs-block-image .image-block-wrapper', sources[0]));
       posts = sources.map(postFromSection).filter(function (p) { return p.slides.length; });
       if (t.code) {
         mount = function (node) { t.code.parentNode.insertBefore(node, t.code.nextSibling); };
