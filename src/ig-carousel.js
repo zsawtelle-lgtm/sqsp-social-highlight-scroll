@@ -1,5 +1,5 @@
 /* ==========================================================================
-   IG Carousel for Squarespace 7.1 — v1.0.0
+   IG Carousel for Squarespace 7.1 — v1.1.0
    Instagram-style post carousel built from native Squarespace content.
    https://github.com/zsawtelle-lgtm/sqsp-social-highlight-scroll
 
@@ -15,29 +15,35 @@
                     has no list in it. The Grid gallery sections directly below
                     it become the posts (one gallery section = one post).
 
-   3. CODE BLOCK    <div data-ig-carousel data-sections="3"></div> in a Code
-                    Block. The next 3 sections become posts. Each can be a
+   3. CODE BLOCK    <div data-ig-carousel data-sections="3" hidden>
+                      <p>Caption for post 1</p> <p>Caption for post 2</p> …
+                    </div>
+                    The next 3 sections become posts. Each can be a Grid
                     gallery section OR a blank (Fluid Engine) section holding
                     image blocks, video blocks and one text block for the
-                    caption — this is the mode for mixed photo + video posts.
+                    caption. data-avatar="first-image" turns each gallery's
+                    first image into that post's profile picture, and its alt
+                    text into the account name.
 
    Options are read (lowest → highest priority) from: defaults,
    window.IGCarouselConfig, IGCarouselConfig.carousels["<anchor id>"],
-   ratio tokens in the anchor id (ig-carousel-2-16x9), data-* attributes on
-   the Code Block div. Per-post "key: value" lines (likes: 1,204) in captions
-   override everything for that post.
+   ratio tokens in the anchor id (ig-carousel-2-16x9), CSS custom properties
+   (--igc-layout, --igc-account …), data-* attributes on the Code Block div.
+   Per-post "key: value" lines (location: Boston) override everything for
+   that post.
    ========================================================================== */
 (function () {
   'use strict';
 
   if (window.IGCarousel && window.IGCarousel.version) return; // loaded twice
 
-  var VERSION = '1.0.0';
+  var VERSION = '1.1.0';
 
   var DEFAULTS = {
     idPrefix: 'ig-carousel',
     account: '',            // account name shown top-left
-    avatar: '',             // image URL for the profile picture
+    avatar: '',             // profile picture URL, or "first-image" (gallery posts:
+                            // first image = avatar, its alt text = account name)
     profile: '',            // URL the account name links to
     verified: false,        // blue check after the account name
     avatarRing: false,      // Instagram story-ring gradient around avatar
@@ -52,22 +58,17 @@
     theme: 'light',         // light | dark | section
     captionLines: 2,        // lines shown before the caption is clipped "…"
     captionExpand: true,    // click caption to read the whole thing
-    likeAnimation: 'roll',  // roll | none   (number flip when liking)
     heartAnimation: 'pop',  // pop | none    (heart icon pop when liking)
-    countUp: true,          // like counts count up when scrolled into view
     doubleTapLike: true,    // double-click / double-tap image to like
     rememberLikes: true,    // keep a visitor's likes/saves in their browser
     showCounter: false,     // "1/3" badge on multi-image posts
-    showLikes: true,
-    likesStyle: 'inline',   // inline = number beside the heart (Framer look)
-                            // line   = "1,204 likes" under the icons (Instagram look)
     showDate: true,
     autoplayVideo: true,    // muted autoplay while the post is on screen
     sections: 'auto',       // section/code-block mode: how many sections to pull
     hideSource: true        // hide the original sections after building
   };
 
-  var META_KEYS = ['likes', 'comments', 'account', 'avatar', 'profile', 'link', 'video', 'location', 'date', 'alt'];
+  var META_KEYS = ['account', 'avatar', 'profile', 'link', 'video', 'location', 'date', 'alt'];
   var STORE_PREFIX = 'igc:';
   var reduceMotion = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
 
@@ -180,36 +181,26 @@
     return '';
   }
 
-  /* "likes: 1,204" lines become meta; everything else is the caption. */
+  /* textContent, but <br> becomes a line break (works inside hidden elements too). */
+  function textWithBreaks(n) {
+    var c = n.cloneNode(true);
+    $$('br', c).forEach(function (br) { br.parentNode.replaceChild(document.createTextNode('\n'), br); });
+    return c.textContent;
+  }
+
+  /* "location: Boston" lines become meta; everything else is the caption. */
   function parseText(node) {
     var meta = {};
     var lines = [];
     if (!node) return { caption: '', meta: meta };
     var blocks = $$('p, h1, h2, h3, h4, li, blockquote', node);
-    var parts = blocks.length ? blocks.map(function (b) { return b.innerText || b.textContent; }) : [(node.innerText || node.textContent)];
+    var parts = (blocks.length ? blocks : [node]).map(textWithBreaks);
     parts.join('\n').split(/\n+/).forEach(function (line) {
       var m = /^\s*([a-z]+)\s*:\s*(.+?)\s*$/i.exec(line);
       if (m && META_KEYS.indexOf(m[1].toLowerCase()) > -1) meta[m[1].toLowerCase()] = m[2];
       else if (line.trim()) lines.push(line.trim());
     });
     return { caption: lines.join('\n'), meta: meta };
-  }
-
-  function parseCount(v) {
-    if (v == null || v === '') return null;
-    var s = String(v).trim().toLowerCase().replace(/,/g, '');
-    var m = /^([\d.]+)\s*([km])?/.exec(s);
-    if (!m) return null;
-    var n = parseFloat(m[1]);
-    if (m[2] === 'k') n *= 1e3;
-    if (m[2] === 'm') n *= 1e6;
-    return { n: Math.round(n), compact: !!m[2] };
-  }
-  function formatCount(n, compact) {
-    if (compact && n >= 10000) {
-      try { return new Intl.NumberFormat('en', { notation: 'compact', maximumFractionDigits: 1 }).format(n).toLowerCase(); } catch (e) {}
-    }
-    try { return n.toLocaleString('en-US'); } catch (e2) { return String(n); }
   }
 
   function ratioOf(aspect) {
@@ -228,6 +219,20 @@
       if (Math.abs(k / (sr[0] / sr[1]) - 1) < 0.03) return sr[0] + ' / ' + sr[1];
     }
     return Math.round(r.width) + ' / ' + Math.round(r.height);
+  }
+
+  /* Read a --igc-* setting from Custom CSS (strips quotes and url()). */
+  function cssSetting(node, name) {
+    var v = getComputedStyle(node).getPropertyValue(name).trim();
+    if (!v) return '';
+    var u = /^url\((['"]?)(.*)\1\)$/.exec(v);
+    if (u) return u[2];
+    return v.replace(/^(['"])(.*)\1$/, '$2');
+  }
+
+  /* Squarespace leaves the file name as alt text when none was typed. */
+  function looksLikeFileName(s) {
+    return !s || /\.(png|jpe?g|gif|webp|avif|heic|svg)$/i.test(s) || /^(img|dsc|image)[-_ ]?\d+/i.test(s);
   }
 
   function isEditMode() {
@@ -296,10 +301,17 @@
     return false;
   }
 
-  function postFromSection(section) {
+  function postFromSection(section, o) {
     var post = { slides: [], caption: '', meta: {} };
     if (isGallerySection(section)) {
-      galleryItems(section).forEach(function (it, i) {
+      var items = galleryItems(section);
+      if (o.avatar === 'first-image' && items.length > 1) {
+        var face = items.shift();
+        post.meta.avatar = face.url;
+        if (!looksLikeFileName(face.alt)) post.meta.account = face.alt;
+        post.profileImage = true;
+      }
+      items.forEach(function (it, i) {
         if (i === 0 && it.caption) {
           var t = parseText(it.caption);
           post.caption = t.caption;
@@ -381,14 +393,12 @@
   }
 
   /* --------------------------------------------------------- Rendering */
-  function Carousel(opts, posts, mount, key) {
+  function Carousel(opts, posts, root, key) {
     this.o = opts;
     this.posts = posts;
     this.key = key;
-    this.countTargets = [];
     this.active = 0;
-    this.root = el('div', 'igc');
-    mount(this.root);
+    this.root = root;   // already in the page, so CSS settings could be read
     this.build();
   }
 
@@ -402,7 +412,8 @@
     root.setAttribute('data-theme', o.theme);
     root.setAttribute('data-heart-animation', reduceMotion ? 'none' : o.heartAnimation);
     root.setAttribute('data-caption-expand', String(!!o.captionExpand));
-    root.style.setProperty('--igc-ratio', o._ratio || '4 / 5');
+    root.style.setProperty('--igc-ratio-js', o._ratio || '4 / 5');
+    if (o._gap) root.style.setProperty('--igc-gap-native', o._gap);
     root.style.setProperty('--igc-caption-lines', o.captionLines);
     if (o.cardWidth) root.style.setProperty('--igc-card-width', /^\d+$/.test(String(o.cardWidth)) ? o.cardWidth + 'px' : o.cardWidth);
     root.style.setProperty('--igc-per-view', o.perView);
@@ -505,7 +516,7 @@
     var m = p.meta || {};
     var total = this.posts.length;
     var account = m.account || o.account || '';
-    var avatar = m.avatar || o.avatar || '';
+    var avatar = m.avatar || (o.avatar === 'first-image' ? '' : o.avatar) || '';
     var profile = m.profile || o.profile || '';
     var loc = m.location || o.location || '';
     var postKey = this.key + ':' + hash((p.slides[0] && p.slides[0].url) || p.caption || String(index));
@@ -624,18 +635,9 @@
     like.type = 'button';
     like.setAttribute('aria-label', 'Like');
     like.setAttribute('aria-pressed', 'false');
-    var count = o.showLikes ? parseCount(m.likes) : null;
-    var countEl = null;
-    if (count) {
-      countEl = el('span', 'igc-count');
-      countEl.setAttribute('data-target', count.n);
-      countEl.innerHTML = '<span>' + formatCount(o.countUp && !reduceMotion ? 0 : count.n, count.compact) + '</span>';
-      if (o.countUp && !reduceMotion) this.countTargets.push({ el: countEl, compact: count.compact });
-    }
     var comment = el(m.link ? 'a' : 'button', 'igc-action igc-comment', ICON.comment);
     if (m.link) { comment.href = m.link; comment.target = '_blank'; comment.rel = 'noopener'; } else comment.type = 'button';
     comment.setAttribute('aria-label', 'Comment');
-    if (m.comments) comment.insertAdjacentHTML('beforeend', '<span>' + esc(m.comments) + '</span>');
     var repost = el('button', 'igc-action igc-repost', ICON.repost);
     repost.type = 'button';
     repost.setAttribute('aria-label', 'Repost');
@@ -650,18 +652,8 @@
     [like, comment, repost, share, save].forEach(function (b) { actions.appendChild(b); });
     art.appendChild(actions);
 
-    /* ---- text: likes line (optional) + clipped caption ---- */
+    /* ---- text: clipped caption ---- */
     var body = el('div', 'igc-body');
-    if (countEl) {
-      if (o.likesStyle === 'line') {
-        var likesRow = el('div', 'igc-likes');
-        likesRow.appendChild(countEl);
-        likesRow.appendChild(document.createTextNode(count.n === 1 ? ' like' : ' likes'));
-        body.appendChild(likesRow);
-      } else {
-        like.appendChild(countEl);
-      }
-    }
     if (p.caption) {
       var cap = el('p', 'igc-caption');
       cap.innerHTML = (account ? '<b>' + esc(account) + '</b>' : '') + esc(p.caption).replace(/\n/g, ' ');
@@ -708,11 +700,6 @@
         like.classList.remove('is-pop');
         void like.offsetWidth;
         like.classList.add('is-pop');
-      }
-      if (countEl) {
-        var target = +countEl.getAttribute('data-target') + (on ? 1 : -1);
-        countEl.setAttribute('data-target', target);
-        if (animate) self.setCount(countEl, target, count.compact, on ? 'up' : 'down');
       }
     }
     if (o.rememberLikes && store(postKey + ':like') === '1') setLiked(true, false);
@@ -766,35 +753,12 @@
     return art;
   };
 
-  Carousel.prototype.setCount = function (countEl, n, compact, dir) {
-    var txt = formatCount(n, compact);
-    var oldSpan = countEl.lastElementChild;
-    if (!dir || this.o.likeAnimation !== 'roll' || reduceMotion) {
-      countEl.innerHTML = '<span>' + txt + '</span>';
-      return;
-    }
-    $$('span', countEl).forEach(function (s) { if (s !== oldSpan) s.remove(); });
-    var neu = el('span', 'is-in-' + dir, txt);
-    oldSpan.className = 'is-out-' + dir;
-    countEl.appendChild(neu);
-    setTimeout(function () { if (oldSpan.parentNode) oldSpan.remove(); neu.className = ''; }, 380);
-  };
-
   Carousel.prototype.observe = function () {
     var self = this;
     if (!('IntersectionObserver' in window)) {
-      this.countTargets.forEach(function (t) { t.el.innerHTML = '<span>' + formatCount(+t.el.getAttribute('data-target'), t.compact) + '</span>'; });
       $$('.igc-media-track', this.root).forEach(function (t) { self.playVisible(t); });
       return;
     }
-    // every like count in the carousel counts up together when it scrolls into view
-    var countIo = new IntersectionObserver(function (entries) {
-      if (!entries[0].isIntersecting) return;
-      countIo.disconnect();
-      self.countTargets.forEach(function (t) { self.countUp(t); });
-    }, { threshold: 0.25 });
-    countIo.observe(this.root);
-
     var io = new IntersectionObserver(function (entries) {
       entries.forEach(function (e) {
         var track = $('.igc-media-track', e.target);
@@ -803,19 +767,6 @@
       });
     }, { threshold: 0.35 });
     $$('.igc-post', this.root).forEach(function (p) { io.observe(p); });
-  };
-
-  Carousel.prototype.countUp = function (t) {
-    var start = null, dur = 1400;
-    function frame(ts) {
-      if (!start) start = ts;
-      var k = Math.min(1, (ts - start) / dur);
-      var eased = 1 - Math.pow(1 - k, 3);
-      var target = +t.el.getAttribute('data-target');
-      t.el.innerHTML = '<span>' + formatCount(Math.round(target * eased), t.compact) + '</span>';
-      if (k < 1) requestAnimationFrame(frame);
-    }
-    requestAnimationFrame(frame);
   };
 
   Carousel.prototype.playVisible = function (track) {
@@ -847,7 +798,8 @@
     if (anchorId && g.carousels && g.carousels[anchorId]) extend(o, g.carousels[anchorId]);
     var tok = anchorId && /-(\d+(?:\.\d+)?x\d+(?:\.\d+)?)$/.exec(anchorId);
     if (tok) o.aspect = tok[1].replace('x', ':');
-    extend(o, dataOptions(codeNode));
+    o._data = dataOptions(codeNode);
+    extend(o, o._data);
     o._anchor = anchorId || '';
     return o;
   }
@@ -883,12 +835,48 @@
     return targets;
   }
 
+  /* "Space between items" from the list / gallery design panel. */
+  /* Custom CSS can set layout / theme / account / avatar per carousel, e.g.
+     #ig-carousel-2 { --igc-layout: row; --igc-account: "swtl.design"; }
+     Code-block data-* attributes still win over CSS. */
+  function applyCssSettings(o, root) {
+    var data = o._data || {};
+    [['layout', '--igc-layout'], ['theme', '--igc-theme'], ['account', '--igc-account'], ['avatar', '--igc-avatar'], ['profile', '--igc-profile']].forEach(function (pair) {
+      if (data[pair[0]] !== undefined) return;
+      var v = cssSetting(root, pair[1]);
+      if (v) o[pair[0]] = v;
+    });
+  }
+
+  function nativeGap(node) {
+    if (!node) return '';
+    var g = parseFloat(getComputedStyle(node).columnGap);
+    return g > 0 ? g + 'px' : '';
+  }
+
+  /* Grid galleries publish their spacing slider as data-gutter before their own
+     script applies it (gutter 48 renders as 2.4vw, i.e. gutter / 20 vw). */
+  function galleryGutter(grid) {
+    var g = grid && parseFloat(grid.getAttribute('data-gutter'));
+    return g > 0 ? (g / 20) + 'vw' : '';
+  }
+
   function buildTarget(t) {
     var section = t.section;
     var anchorId = anchorIdOf(section);
     var o = optionsFor(anchorId, t.code);
     var list = !t.code && $('.user-items-list', section);
-    var posts, mount, measureNode, hidden = [];
+    var root = el('div', 'igc');
+    var posts, measureNode, hidden = [];
+    if (list) {
+      list.parentNode.insertBefore(root, list.nextSibling);
+    } else if (t.code) {
+      t.code.parentNode.insertBefore(root, t.code.nextSibling);
+    } else {
+      root.style.marginTop = 'var(--igc-section-spacing, 2rem)';
+      ($('.content-wrapper > .content', section) || $('.content-wrapper', section) || section).appendChild(root);
+    }
+    applyCssSettings(o, root);
 
     if (list) {
       measureNode = $('.user-items-list-carousel__media-container, .list-image, .user-items-list-simple__media, .list-item img', list);
@@ -896,30 +884,34 @@
         var nativeRatio = $('[data-media-aspect-ratio]', list);   // the list section's Image ratio setting
         o._ratio = (nativeRatio && ratioOf(nativeRatio.getAttribute('data-media-aspect-ratio'))) || measureRatio(measureNode);
       }
+      o._gap = nativeGap($('.user-items-list-carousel__slides, .user-items-list-simple, .user-items-list-banner-slideshow__slides', list));
       posts = postsFromList(list);
-      mount = function (node) { list.parentNode.insertBefore(node, list.nextSibling); };
       hidden.push(list);
     } else {
       var count = o.sections === 'auto' ? 'auto' : Math.max(1, parseInt(o.sections, 10) || 1);
       var sources = nextSections(section, count);
-      if (!sources.length) return;
-      if (o.aspect === 'native') o._ratio = measureRatio($('.gallery-grid-item, .sqs-block-image .image-block-wrapper', sources[0]));
-      posts = sources.map(postFromSection).filter(function (p) { return p.slides.length; });
-      if (t.code) {
-        mount = function (node) { t.code.parentNode.insertBefore(node, t.code.nextSibling); };
-      } else {
-        var content = $('.content-wrapper > .content', section) || $('.content-wrapper', section) || section;
-        mount = function (node) {
-          node.style.marginTop = 'var(--igc-section-spacing, 2rem)';
-          content.appendChild(node);
-        };
+      if (!sources.length) { root.remove(); return; }
+      if (o.aspect === 'native') {   // measure a real photo, not the profile image
+        var tiles = $$('.gallery-grid-item, .sqs-block-image .image-block-wrapper', sources[0]);
+        o._ratio = measureRatio(tiles[o.avatar === 'first-image' && tiles.length > 1 ? 1 : 0]);
       }
+      o._gap = nativeGap($('.gallery-grid-wrapper', sources[0])) || galleryGutter($('.gallery-grid[data-gutter]', sources[0]));
+      var captions = t.code ? $$('p, li', t.code).map(parseText) : [];
+      posts = sources.map(function (src, i) {
+        var post = postFromSection(src, o);
+        var c = captions[i];
+        if (c) {
+          if (c.caption) post.caption = c.caption;
+          extend(post.meta, c.meta);
+        }
+        return post;
+      }).filter(function (p) { return p.slides.length; });
       if (o.hideSource) hidden = hidden.concat(sources);
     }
-    if (!posts.length) return;
+    if (!posts.length) { root.remove(); return; }
     if (!o._ratio) o._ratio = ratioOf(o.aspect) || '4 / 5';
 
-    var carousel = new Carousel(o, posts, mount, anchorId || ('igc-' + instances.length));
+    var carousel = new Carousel(o, posts, root, anchorId || ('igc-' + instances.length));
     hidden.forEach(function (h) { h.classList.add('igc-source-hidden'); });
     instances.push({ carousel: carousel, hidden: hidden, section: section });
     carousel.root.dispatchEvent(new CustomEvent('igc:ready', { bubbles: true, detail: { id: anchorId, posts: posts.length, options: o } }));

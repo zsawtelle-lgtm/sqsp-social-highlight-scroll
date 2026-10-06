@@ -1,23 +1,36 @@
 /* ==========================================================================
-   IG Carousel for Squarespace 7.1 — v1.0.0
+   IG Carousel for Squarespace 7.1 — v1.1.0
    https://github.com/zsawtelle-lgtm/sqsp-social-highlight-scroll
    Every class, variable and keyframe is prefixed "igc-" so nothing collides
    with the template or with other plugins.
-   Override any --igc-* variable in Custom CSS, e.g.
-     #ig-carousel-2 .igc { --igc-card-width: 420px; --igc-heart: #e1306c; }
+   SETTINGS YOU CAN SET IN CUSTOM CSS (on the section anchor, or .igc for all):
+     #ig-carousel-2 {
+       --igc-layout: focus;             focus | row
+       --igc-aspect: 4 / 5;             any ratio: 1 / 1, 16 / 9, 9 / 16 …
+       --igc-theme: light;              light | dark | section
+       --igc-account: "swtl.design";    account name
+       --igc-avatar: url("https://…");  profile image (or: first-image)
+       --igc-gap: 24px;                 space between posts (default: the
+                                        list/gallery "space between items")
+       --igc-letter-spacing: normal;    use "inherit" to follow paragraph style
+     }
+   Everything else (colours, sizes) is the --igc-* list below; override it
+   with  #ig-carousel-2 .igc { --igc-card-width: 420px; }
    ========================================================================== */
 
 .igc {
   /* ---- Layout ---------------------------------------------------------- */
   --igc-card-width: 380px;      /* "focus" layout: width of the centre card */
-  --igc-gap: 24px;              /* space between posts                      */
+  /* --igc-gap: unset by default → Squarespace's own item spacing → 24px */
+  --_gap: var(--igc-gap, var(--igc-gap-native, 24px));
   --igc-peek-scale: 0.88;       /* "focus" layout: size of side posts        */
   --igc-peek-opacity: 0.45;     /* "focus" layout: fade of side posts        */
   --igc-per-view: 3;            /* "row" layout: posts visible on desktop   */
   --igc-per-view-tablet: 2;     /* "row" layout: ≤ 1024px                    */
   --igc-per-view-mobile: 1.12;  /* "row" layout: ≤ 640px (decimal = peek)   */
   --igc-max-width: 1200px;
-  --igc-ratio: 4 / 5;           /* set by the "aspect" option               */
+  /* --igc-aspect: unset by default → the "aspect" option (4 / 5) */
+  --_ratio: var(--igc-aspect, var(--igc-ratio-js, 4 / 5));
 
   /* ---- Card (light theme) ---------------------------------------------- */
   --igc-card-bg: #ffffff;
@@ -27,8 +40,13 @@
   --igc-media-bg: #efefef;
   --igc-text: #0c1014;
   --igc-muted: #737373;
-  --igc-font: inherit;          /* follows Site Styles; set a font here only if you must */
   --igc-font-size: 14px;
+  /* Typography (fonts follow Site Styles unless set):
+     --igc-font, --igc-name-font, --igc-caption-font          font-family
+     --igc-name-size / --igc-caption-size                     default --igc-font-size
+     --igc-name-weight (600) / --igc-caption-weight (inherit)
+     --igc-letter-spacing (normal), --igc-name-letter-spacing,
+     --igc-caption-letter-spacing, --igc-caption-line-height (1.35) */
   --igc-avatar-size: 32px;
   --igc-avatar-ring: linear-gradient(45deg, #feda75, #fa7e1e, #d62976, #962fbf, #4f5bd5);
   --igc-icon-size: 24px;
@@ -47,8 +65,10 @@
   width: 100%;
   max-width: var(--igc-max-width);
   margin: 0 auto;
-  font-family: var(--igc-font);
+  font-family: var(--igc-font, inherit);
   font-size: var(--igc-font-size);
+  letter-spacing: var(--igc-letter-spacing, normal);
+  text-transform: none;
   line-height: 1.25;
   color: var(--igc-text);
   -webkit-font-smoothing: antialiased;
@@ -106,7 +126,7 @@
 .igc-viewport {
   display: flex;
   align-items: flex-start;
-  gap: var(--igc-gap);
+  gap: var(--_gap);
   overflow-x: auto;
   overflow-y: hidden;
   scroll-snap-type: x mandatory;
@@ -148,7 +168,7 @@
 /* Layout: row — several posts side by side */
 .igc[data-layout="row"] .igc-post {
   --_n: var(--igc-per-view);
-  flex: 0 0 calc((100% - (var(--_n) - 1) * var(--igc-gap)) / var(--_n));
+  flex: 0 0 calc((100% - (var(--_n) - 1) * var(--_gap)) / var(--_n));
   scroll-snap-align: start;
 }
 .igc[data-layout="row"][data-centered="true"] .igc-viewport { justify-content: center; }
@@ -194,11 +214,15 @@
   text-transform: uppercase;
 }
 .igc-who { display: flex; flex-direction: column; justify-content: center; min-width: 0; gap: 2px; }
-.igc-account {
+.igc .igc-account {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  font-weight: 600;
+  font-family: var(--igc-name-font, inherit);
+  font-size: var(--igc-name-size, var(--igc-font-size));
+  font-weight: var(--igc-name-weight, 600);
+  letter-spacing: var(--igc-name-letter-spacing, var(--igc-letter-spacing, normal));
+  text-transform: none;
   color: inherit;
   text-decoration: none;
   white-space: nowrap;
@@ -214,7 +238,7 @@ a.igc-account:hover { opacity: 0.7; }
 /* ---------------------------------------------------------------- Media */
 .igc-media {
   position: relative;
-  aspect-ratio: var(--igc-ratio);
+  aspect-ratio: var(--_ratio);
   background: var(--igc-media-bg);
   overflow: hidden;
   user-select: none;
@@ -412,29 +436,15 @@ a.igc-account:hover { opacity: 0.7; }
 .igc-save.is-saved .igc-save-on { display: block; }
 .igc-repost.is-reposted { color: #00ba7c; }
 
-/* Like count — rolls like an odometer when the heart is tapped */
-.igc-count {
-  display: inline-grid;
-  overflow: hidden;
-  height: 1.25em;
-  line-height: 1.25em;
-  font-variant-numeric: tabular-nums;
-}
-.igc-count > span { grid-area: 1 / 1; }
-.igc-count .is-out-up   { animation: igc-out-up 0.35s ease forwards; }
-.igc-count .is-in-up    { animation: igc-in-up 0.35s ease forwards; }
-.igc-count .is-out-down { animation: igc-out-down 0.35s ease forwards; }
-.igc-count .is-in-down  { animation: igc-in-down 0.35s ease forwards; }
-@keyframes igc-out-up   { to   { transform: translateY(-100%); opacity: 0; } }
-@keyframes igc-in-up    { from { transform: translateY(100%);  opacity: 0; } }
-@keyframes igc-out-down { to   { transform: translateY(100%);  opacity: 0; } }
-@keyframes igc-in-down  { from { transform: translateY(-100%); opacity: 0; } }
-
 /* ----------------------------------------------------------- Text area */
 .igc-body { padding: 0 14px 14px; display: flex; flex-direction: column; gap: 4px; }
-.igc-likes { font-weight: 600; }
-.igc-caption {
+.igc p.igc-caption {
   margin: 0;
+  padding: 0;
+  font-family: var(--igc-caption-font, inherit);
+  font-weight: var(--igc-caption-weight, inherit);
+  letter-spacing: var(--igc-caption-letter-spacing, var(--igc-letter-spacing, normal));
+  text-transform: none;
   display: -webkit-box;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: var(--igc-caption-lines);
@@ -442,13 +452,13 @@ a.igc-account:hover { opacity: 0.7; }
   overflow: hidden;
   text-overflow: ellipsis;          /* clipped text ends in "…" */
   overflow-wrap: anywhere;
-  font-size: var(--igc-font-size);
-  line-height: 1.35;
+  font-size: var(--igc-caption-size, var(--igc-font-size));
+  line-height: var(--igc-caption-line-height, 1.35);
   color: inherit;
 }
-.igc-caption b { font-weight: 600; margin-right: 4px; }
+.igc-caption b { font-weight: var(--igc-name-weight, 600); margin-right: 4px; letter-spacing: var(--igc-name-letter-spacing, inherit); }
 .igc[data-caption-expand="true"] .igc-caption { cursor: pointer; }
-.igc-caption.is-open { -webkit-line-clamp: unset; line-clamp: unset; display: block; }
+.igc p.igc-caption.is-open { -webkit-line-clamp: unset; line-clamp: unset; display: block; }
 .igc-meta { color: var(--igc-muted); font-size: 12px; }
 
 /* ----------------------------------------------------- Source hiding */
