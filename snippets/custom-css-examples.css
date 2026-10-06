@@ -25,6 +25,9 @@
   --igc-per-view-tablet: 2;           /* posts across, 641–1024px */
   --igc-per-view-mobile: 1.2;         /* posts across, ≤ 640px (decimal = neighbours peek) */
 
+  --igc-start: first;                 /* post in focus on load, screens ≥ 1025px: first | center | last | 3 … */
+  --igc-start-mobile: first;          /* same, tablets + phones (≤ 1024px) */
+
   --igc-gap: 24px;                    /* space between posts — delete to use Squarespace's own item spacing */
   --igc-max-width: none;              /* cap the carousel width, e.g. 1200px — none = fill the block */
 
