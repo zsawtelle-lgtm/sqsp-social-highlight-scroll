@@ -1,7 +1,7 @@
 # IG Carousel
 
 Instagram-style post carousels built from native Squarespace content.
-Repo: <https://github.com/zsawtelle-lgtm/sqsp-social-highlight-scroll> · Version **1.3.0** · Status: **beta: installed on swtldesignco.com staging**
+Repo: <https://github.com/zsawtelle-lgtm/sqsp-social-highlight-scroll> · Version **1.3.1** · Status: **beta: installed on swtldesignco.com staging**
 
 ---
 
@@ -243,6 +243,9 @@ and [`snippets/code-block.html`](../snippets/code-block.html).
 Replace `#ig-carousel` with the carousel's section anchor, or use `.igc` for every
 carousel on the site.
 
+Block **XX.3** is optional: it fades the posts out toward the left and right edges
+instead of cutting them off hard. Leave it out for hard edges.
+
 ```css
 /* ===================================================================
    IG Carousel — Custom CSS settings (Design → Custom CSS)
@@ -321,6 +324,22 @@ carousel on the site.
   /* Caption lines before "…" — the plugin also sets this one, so CSS needs
      !important here (or use data-caption-lines in the code block): */
   /* --igc-caption-lines: 2 !important; */
+}
+
+/* XX.3 OPTIONAL — soft fade at the left/right edges instead of a hard cut.
+   12% / 88% = how far in the fade reaches from each side (keep them mirrored;
+   e.g. 20% / 80% for a longer, softer fade). Phones get a lighter fade so the
+   peeking neighbours stay visible. Use #ig-carousel .igc-viewport to fade
+   one carousel only. */
+.igc .igc-viewport {
+  -webkit-mask-image: linear-gradient(to right, transparent 0%, #000 12%, #000 88%, transparent 100%);
+  mask-image: linear-gradient(to right, transparent 0%, #000 12%, #000 88%, transparent 100%);
+}
+@media (max-width: 640px) {
+  .igc .igc-viewport {
+    -webkit-mask-image: linear-gradient(to right, transparent 0%, #000 6%, #000 94%, transparent 100%);
+    mask-image: linear-gradient(to right, transparent 0%, #000 6%, #000 94%, transparent 100%);
+  }
 }
 ```
 
@@ -472,7 +491,8 @@ Method C carousels can take an anchor too: give the code block's section one.
 ```
 .igc                       [data-layout] [data-theme]   ← after the list / after the code block div
 └─ .igc-viewport           horizontal scroll-snap track (posts)
-   └─ article.igc-post     .is-active on the centred post
+   └─ article.igc-post     snap target; .is-active / .is-before / .is-after
+      └─ .igc-card         the visible card (shrinks/fades when not centred)
       ├─ header.igc-head   .igc-avatar · .igc-who (.igc-account, .igc-location) · .igc-more
       ├─ .igc-media        aspect-ratio box
       │  ├─ .igc-media-track   scroll-snap track (photos) › .igc-slide (img | video | iframe | moved block)
@@ -482,6 +502,10 @@ Method C carousels can take an anchor too: give the code block's section one.
       ├─ .igc-actions      .igc-like(.is-liked) · .igc-comment · .igc-repost · .igc-share · .igc-save(.is-saved)
       └─ .igc-body         .igc-caption(.is-open) · .igc-meta
 ```
+
+Each `article.igc-post` is the scroll-snap target and is never transformed. The visible
+card is the `.igc-card` inside it, which is what shrinks and fades. A transformed snap
+target moves its snap point mid-animation, and the browser corrects with a visible jump.
 
 Source sections get `.igc-source-hidden` (display none). Moved video blocks leave a
 comment placeholder and are put back when the editor opens. The plugin sets
@@ -506,7 +530,7 @@ without `data-`), plus:
 | `IGCarousel.init()` | function | Build any carousels not yet built |
 | `IGCarousel.destroy()` | function | Remove all carousels and restore the original sections |
 | `IGCarousel.refresh()` | function | `destroy()` then `init()` |
-| `IGCarousel.version` | string | `1.3.0` |
+| `IGCarousel.version` | string | `1.3.1` |
 
 The plugin watches `body.class` for `sqs-edit-mode-active` and tears down or rebuilds automatically.
 

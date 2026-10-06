@@ -76,3 +76,19 @@
      !important here (or use data-caption-lines in the code block): */
   /* --igc-caption-lines: 2 !important; */
 }
+
+/* XX.3 OPTIONAL — soft fade at the left/right edges instead of a hard cut.
+   12% / 88% = how far in the fade reaches from each side (keep them mirrored;
+   e.g. 20% / 80% for a longer, softer fade). Phones get a lighter fade so the
+   peeking neighbours stay visible. Use #ig-carousel .igc-viewport to fade
+   one carousel only. */
+.igc .igc-viewport {
+  -webkit-mask-image: linear-gradient(to right, transparent 0%, #000 12%, #000 88%, transparent 100%);
+  mask-image: linear-gradient(to right, transparent 0%, #000 12%, #000 88%, transparent 100%);
+}
+@media (max-width: 640px) {
+  .igc .igc-viewport {
+    -webkit-mask-image: linear-gradient(to right, transparent 0%, #000 6%, #000 94%, transparent 100%);
+    mask-image: linear-gradient(to right, transparent 0%, #000 6%, #000 94%, transparent 100%);
+  }
+}

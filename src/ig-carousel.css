@@ -1,5 +1,5 @@
 /* ==========================================================================
-   IG Carousel for Squarespace 7.1 — v1.3.0
+   IG Carousel for Squarespace 7.1 — v1.3.1
    https://github.com/zsawtelle-lgtm/sqsp-social-highlight-scroll
    Every class, variable and keyframe is prefixed "igc-" so nothing collides
    with the template or with other plugins.
@@ -141,8 +141,16 @@
 }
 .igc-viewport::-webkit-scrollbar { display: none; }
 
+/* .igc-post is what the track snaps to — it never transforms, so snapping
+   stays smooth. The visible card (.igc-card) inside it does the shrinking. */
 .igc-post {
   position: relative;
+  min-width: 0;
+  display: flex;
+}
+.igc-card {
+  position: relative;
+  flex: 1 1 auto;
   min-width: 0;
   display: flex;
   flex-direction: column;
@@ -166,17 +174,17 @@
   flex: 0 0 var(--_cw);
   scroll-snap-align: center;
 }
-.igc[data-layout="focus"] .igc-post:not(.is-active) {
+.igc[data-layout="focus"] .igc-post:not(.is-active) { cursor: pointer; }
+.igc[data-layout="focus"] .igc-post:not(.is-active) > .igc-card {
   transform: scale(var(--igc-peek-scale));
   opacity: var(--igc-peek-opacity);
-  cursor: pointer;
 }
 .igc[data-layout="focus"] .igc-post:not(.is-active) > * { pointer-events: none; }
-.igc[data-layout="focus"] .igc-post.is-before {
+.igc[data-layout="focus"] .igc-post.is-before > .igc-card {
   transform-origin: right center;
   transform: translateX(calc(var(--_far, 0) * var(--_cw) * (1 - var(--igc-peek-scale)))) scale(var(--igc-peek-scale));
 }
-.igc[data-layout="focus"] .igc-post.is-after {
+.igc[data-layout="focus"] .igc-post.is-after > .igc-card {
   transform-origin: left center;
   transform: translateX(calc(var(--_far, 0) * var(--_cw) * (var(--igc-peek-scale) - 1))) scale(var(--igc-peek-scale));
 }
