@@ -1,26 +1,85 @@
 <!-- ===================================================================
      IG Carousel — Code Block (Method C)
      Add a Code Block to the section ABOVE your post sections, stretch it
-     full width, and paste this.
-       data-sections        how many sections below become posts
-       data-avatar          "first-image" = each gallery's first image is
-                            the profile picture and its alt text the account
-                            name. Delete it to use the Footer account.
-       data-per-view-*      optional: posts across per screen size
-                            (wide ≥1600 / desktop / tablet / mobile)
-       <p> lines            one caption per post, in order. Use <br> for
-                            extra lines like  location: Boston, MA
-     Keep "hidden" so the captions never flash on the page.
+     full width, and paste ONE of the two versions below.
+
+     • Each setting goes inside the opening <div …> tag, before "hidden>",
+       written as  name="value"  — one per line is fine.
+     • Values shown are the DEFAULTS. Delete any line you don't change.
+     • Code block values win over Custom CSS. If you set layout, aspect,
+       theme or per-view in CSS, leave those lines out here.
+     • One <p> per post, in order = that post's caption. An empty <p></p>
+       uses the post's own text (video description / text block).
+     • Keep "hidden" so the captions never flash on the page.
      =================================================================== -->
+
+
+<!-- VERSION 1 — Minimal (use with the Custom CSS settings route) -->
 <div data-ig-carousel
-     data-sections="3"
+     data-sections="4"
      data-avatar="first-image"
+     hidden>
+  <p>Gallery 1 caption</p>
+  <p>Gallery 2 caption</p>
+  <p>Gallery 3 caption</p>
+  <p>Gallery 4 caption</p>
+</div>
+
+
+<!-- VERSION 2 — Everything in the code block -->
+<div data-ig-carousel
+     data-sections="4"
+     data-avatar="first-image"
+     data-layout="focus"
+     data-aspect="4:5"
+     data-theme="light"
      data-per-view-wide="5"
      data-per-view="3"
      data-per-view-tablet="2"
      data-per-view-mobile="1.2"
+     data-card-width="380px"
+     data-caption-lines="2"
+     data-caption-expand="true"
+     data-verified="false"
+     data-avatar-ring="false"
+     data-heart-animation="pop"
+     data-double-tap-like="true"
+     data-remember-likes="true"
+     data-show-counter="false"
+     data-show-date="true"
+     data-autoplay-video="true"
+     data-hide-source="true"
      hidden>
-  <p>Caption for post 1</p>
-  <p>Caption for post 2</p>
-  <p>Caption for post 3</p>
+  <p>Gallery 1 caption</p>
+  <p>Gallery 2 caption</p>
+  <p>Gallery 3 caption</p>
+  <p>Gallery 4 caption</p>
 </div>
+
+<!-- What each setting does
+     data-sections          how many sections below become posts
+     data-avatar            "first-image" = each gallery's first image is the
+                            profile picture, its alt text the account name.
+                            Or a picture URL. Delete to use the Footer account.
+     data-account           account name (single profile)
+     data-profile           where the account name links
+     data-layout            focus | row
+     data-aspect            1:1 | 4:5 | 16:9 | 9:16 | native
+     data-theme             light | dark | section
+     data-per-view-wide     posts across ≥ 1600px
+     data-per-view          posts across 1025–1599px
+     data-per-view-tablet   posts across 641–1024px
+     data-per-view-mobile   posts across ≤ 640px (decimal = neighbours peek)
+     data-card-width        largest card width (focus layout)
+     data-caption-lines     caption lines before "…"
+     data-caption-expand    click a caption to show all of it
+     data-verified          blue check after the account name
+     data-avatar-ring       Instagram story ring around the profile picture
+     data-heart-animation   pop | none
+     data-double-tap-like   double-tap a photo to like it
+     data-remember-likes    remember a visitor's likes/saves in their browser
+     data-show-counter      "1/4" badge on multi-photo posts
+     data-show-date         show a post's date: line
+     data-autoplay-video    muted autoplay while a video post is centred
+     data-hide-source       hide the original sections on the live site
+-->

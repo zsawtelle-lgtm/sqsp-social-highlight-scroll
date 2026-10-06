@@ -231,6 +231,158 @@ Ratio shortcut, any method: end the anchor with the ratio, e.g. `ig-carousel-2-1
 
 ---
 
+# Settings cheat sheet
+
+Two ways to set up each carousel. Values shown are the **defaults**: change what
+you need and delete the rest. Code block values win over Custom CSS, so set each
+value in one place only. Copy-paste files: [`snippets/custom-css-examples.css`](../snippets/custom-css-examples.css)
+and [`snippets/code-block.html`](../snippets/code-block.html).
+
+## Custom CSS route (Design → Custom CSS)
+
+Replace `#ig-carousel` with the carousel's section anchor, or use `.igc` for every
+carousel on the site.
+
+```css
+/* ===================================================================
+   IG Carousel — Custom CSS settings (Design → Custom CSS)
+   Paste as its own numbered section and renumber "XX" to fit the site's
+   table of contents, e.g.
+     XX. IG Carousel ................ instagram-style post carousels
+
+   • Replace #ig-carousel with the carousel's section anchor
+     (#ig-carousel-2 …), or use .igc to change every carousel on the site.
+   • Every value below is the DEFAULT. Delete any line you don't change.
+   • Settings in a code block (data-…) win over these, so set each value
+     in one place only.
+   • No calc() math with var() here: Squarespace's LESS compiler rejects it.
+   =================================================================== */
+
+/* ===== XX. IG CAROUSEL ===== */
+
+/* XX.1 Layout & content settings — on the section anchor */
+#ig-carousel {
+  --igc-layout: focus;                /* focus = centred post, neighbours peek | row = side by side */
+  --igc-aspect: 4 / 5;                /* 1 / 1 | 4 / 5 | 16 / 9 | 9 / 16 */
+  --igc-theme: light;                 /* light | dark | section */
+
+  --igc-per-view-wide: 5;             /* posts across, screens ≥ 1600px */
+  --igc-per-view: 3;                  /* posts across, 1025–1599px (laptops) */
+  --igc-per-view-tablet: 2;           /* posts across, 641–1024px */
+  --igc-per-view-mobile: 1.2;         /* posts across, ≤ 640px (decimal = neighbours peek) */
+
+  --igc-gap: 24px;                    /* space between posts — delete to use Squarespace's own item spacing */
+  --igc-max-width: none;              /* cap the carousel width, e.g. 1200px — none = fill the block */
+
+  /* Single profile for this carousel (instead of the Footer account): */
+  /* --igc-account: "your.account"; */
+  /* --igc-avatar: url("https://images.squarespace-cdn.com/…/avatar.jpg"); */
+  /* --igc-profile: "https://www.instagram.com/your.account/"; */
+}
+
+/* XX.2 Card size, typography & colours — on the carousel itself (.igc) */
+#ig-carousel .igc {
+  /* Size */
+  --igc-card-width: 380px;            /* largest card width (focus layout); cards shrink to fit per-view */
+  --igc-card-radius: 20px;            /* card corners */
+  --igc-peek-scale: 0.88;             /* size of the faded side posts (1 = same size) */
+  --igc-peek-opacity: 0.45;           /* fade of the side posts (1 = no fade) */
+  --igc-avatar-size: 32px;            /* profile picture */
+  --igc-icon-size: 24px;              /* heart / comment / repost / share / save */
+  --igc-arrow-size: 32px;             /* middle arrows */
+
+  /* Typography — fonts follow Site Styles unless set here */
+  --igc-font-size: 14px;              /* base size for name + caption */
+  --igc-letter-spacing: normal;       /* "inherit" = follow the paragraph style */
+  --igc-name-size: 14px;              /* account name */
+  --igc-name-weight: 600;
+  --igc-caption-size: 14px;
+  --igc-caption-line-height: 1.35;
+  /* --igc-font: var(--body-font-font-family);          whole card */
+  /* --igc-name-font: var(--heading-font-font-family);  account name */
+  /* --igc-caption-font: var(--body-font-font-family);  caption */
+  /* --igc-caption-weight: 400; */
+  /* --igc-name-letter-spacing: normal; */
+  /* --igc-caption-letter-spacing: normal; */
+
+  /* Colours (light theme values shown) */
+  --igc-card-bg: #ffffff;
+  --igc-text: #0c1014;
+  --igc-muted: #737373;               /* date line */
+  --igc-media-bg: #efefef;            /* behind photos while loading */
+  --igc-card-border: 1px solid rgba(0, 0, 0, 0.1);
+  --igc-card-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+  --igc-heart: #ff3040;               /* liked heart */
+  --igc-dot: rgba(255, 255, 255, 0.5);
+  --igc-dot-active: #ffffff;
+  --igc-arrow-bg: rgba(0, 0, 0, 0.4);
+  --igc-arrow-color: #ffffff;
+
+  /* Caption lines before "…" — the plugin also sets this one, so CSS needs
+     !important here (or use data-caption-lines in the code block): */
+  /* --igc-caption-lines: 2 !important; */
+}
+```
+
+## Code block route
+
+Each setting goes inside the opening `<div …>` tag, before `hidden>`, as `name="value"`.
+
+**Minimal**, for use with the Custom CSS route:
+
+```html
+<div data-ig-carousel
+     data-sections="4"
+     data-avatar="first-image"
+     hidden>
+  <p>Gallery 1 caption</p>
+  <p>Gallery 2 caption</p>
+  <p>Gallery 3 caption</p>
+  <p>Gallery 4 caption</p>
+</div>
+```
+
+**Everything in the code block:**
+
+```html
+<div data-ig-carousel
+     data-sections="4"
+     data-avatar="first-image"
+     data-layout="focus"
+     data-aspect="4:5"
+     data-theme="light"
+     data-per-view-wide="5"
+     data-per-view="3"
+     data-per-view-tablet="2"
+     data-per-view-mobile="1.2"
+     data-card-width="380px"
+     data-caption-lines="2"
+     data-caption-expand="true"
+     data-verified="false"
+     data-avatar-ring="false"
+     data-heart-animation="pop"
+     data-double-tap-like="true"
+     data-remember-likes="true"
+     data-show-counter="false"
+     data-show-date="true"
+     data-autoplay-video="true"
+     data-hide-source="true"
+     hidden>
+  <p>Gallery 1 caption</p>
+  <p>Gallery 2 caption</p>
+  <p>Gallery 3 caption</p>
+  <p>Gallery 4 caption</p>
+</div>
+```
+
+Settings only available in the code block (or the Footer config): `data-sections`,
+`data-verified`, `data-avatar-ring`, `data-caption-expand`, `data-heart-animation`,
+`data-double-tap-like`, `data-remember-likes`, `data-show-counter`, `data-show-date`,
+`data-autoplay-video` and `data-hide-source`. Their meanings are listed in
+[Customizations](#customizations-per-instance-attributes).
+
+---
+
 # Part 2 — Styling
 
 ## Optional styles
