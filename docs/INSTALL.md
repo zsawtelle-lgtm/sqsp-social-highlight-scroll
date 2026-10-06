@@ -1,7 +1,7 @@
 # IG Carousel
 
 Instagram-style post carousels built from native Squarespace content.
-Repo: <https://github.com/zsawtelle-lgtm/sqsp-social-highlight-scroll> · Version **1.3.1** · Status: **beta: installed on swtldesignco.com staging**
+Repo: <https://github.com/zsawtelle-lgtm/sqsp-social-highlight-scroll> · Version **1.4.0** · Status: **beta: installed on swtldesignco.com staging**
 
 ---
 
@@ -199,6 +199,8 @@ Priority, lowest to highest: Footer `IGCarouselConfig` → Footer `carousels['an
 | `data-per-view` | `3` | number | Posts across on laptops/desktops (1025–1599px) |
 | `data-per-view-tablet` | `2` | number | Posts across on tablets (641–1024px) |
 | `data-per-view-mobile` | `1.2` | number | Posts across on phones (≤640px); decimals let the neighbours peek |
+| `data-start` | `first` | `first` `center` `last` or a post number | Post in focus when the page loads, on screens ≥1025px. `center` = the middle post (post 3 of 5), so visitors can go either way |
+| `data-start-mobile` | `first` | same | Post in focus on load on tablets and phones (≤1024px) |
 | `data-verified` | `false` | `true` `false` | Blue check |
 | `data-avatar-ring` | `false` | `true` `false` | Story-ring gradient |
 | `data-location` | — | text | Line under the name |
@@ -273,6 +275,9 @@ instead of cutting them off hard. Leave it out for hard edges.
   --igc-per-view: 3;                  /* posts across, 1025–1599px (laptops) */
   --igc-per-view-tablet: 2;           /* posts across, 641–1024px */
   --igc-per-view-mobile: 1.2;         /* posts across, ≤ 640px (decimal = neighbours peek) */
+
+  --igc-start: first;                 /* post in focus on load, screens ≥ 1025px: first | center | last | 3 … */
+  --igc-start-mobile: first;          /* same, tablets + phones (≤ 1024px) */
 
   --igc-gap: 24px;                    /* space between posts — delete to use Squarespace's own item spacing */
   --igc-max-width: none;              /* cap the carousel width, e.g. 1200px — none = fill the block */
@@ -374,6 +379,8 @@ Each setting goes inside the opening `<div …>` tag, before `hidden>`, as `name
      data-per-view="3"
      data-per-view-tablet="2"
      data-per-view-mobile="1.2"
+     data-start="first"
+     data-start-mobile="first"
      data-card-width="380px"
      data-caption-lines="2"
      data-caption-expand="true"
@@ -431,6 +438,7 @@ example is in [`snippets/custom-css-examples.css`](../snippets/custom-css-exampl
 | `--igc-gap` | Squarespace spacing, else `24px` | Space between posts. Unset = the list's "space between items" or the gallery's spacing slider |
 | `--igc-per-view-wide` / `--igc-per-view` / `--igc-per-view-tablet` / `--igc-per-view-mobile` | `5` / `3` / `2` / `1.2` | Posts across at ≥1600 / 1025–1599 / 641–1024 / ≤640px. Both layouts. No `!important` needed |
 | `--igc-max-width` | none (fills its block) | Cap the carousel width, e.g. `1200px` |
+| `--igc-start` / `--igc-start-mobile` | `first` | Post in focus on load: `first`, `center`, `last` or a post number. Desktop (≥1025px) / tablets + phones |
 
 **Typography.** Fonts follow **Site Styles**. Letter-spacing is reset to `normal`
 because Squarespace paragraph styles often add loose tracking.
@@ -530,7 +538,7 @@ without `data-`), plus:
 | `IGCarousel.init()` | function | Build any carousels not yet built |
 | `IGCarousel.destroy()` | function | Remove all carousels and restore the original sections |
 | `IGCarousel.refresh()` | function | `destroy()` then `init()` |
-| `IGCarousel.version` | string | `1.3.1` |
+| `IGCarousel.version` | string | `1.4.0` |
 
 The plugin watches `body.class` for `sqs-edit-mode-active` and tears down or rebuilds automatically.
 

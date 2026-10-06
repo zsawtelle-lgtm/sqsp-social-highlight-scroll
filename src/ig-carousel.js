@@ -1,5 +1,5 @@
 /* ==========================================================================
-   IG Carousel for Squarespace 7.1 — v1.3.1
+   IG Carousel for Squarespace 7.1 — v1.4.0
    Instagram-style post carousel built from native Squarespace content.
    https://github.com/zsawtelle-lgtm/sqsp-social-highlight-scroll
 
@@ -37,7 +37,7 @@
 
   if (window.IGCarousel && window.IGCarousel.version) return; // loaded twice
 
-  var VERSION = '1.3.1';
+  var VERSION = '1.4.0';
 
   var DEFAULTS = {
     idPrefix: 'ig-carousel',
@@ -56,6 +56,8 @@
     perView: 3,             // 1025–1599px (focus layout: card shrinks to fit, max cardWidth)
     perViewTablet: 2,       // 641–1024px
     perViewMobile: 1.2,     // ≤ 640px (decimal = next post peeks in)
+    start: 'first',         // post in focus on load, screens ≥ 1025px: first | center | last | number
+    startMobile: 'first',   // same, screens ≤ 1024px (tablets + phones)
     theme: 'light',         // light | dark | section
     captionLines: 2,        // lines shown before the caption is clipped "…"
     captionExpand: true,    // click caption to read the whole thing
@@ -517,7 +519,38 @@
       }
     }, true);
     this.observe();
+    this.applyStart();
     this.update();
+  };
+
+  /* Post in focus on load: desktop uses "start", tablets/phones "startMobile". */
+  Carousel.prototype.startIndex = function () {
+    var o = this.o, n = this.cards.length;
+    var mobile = window.matchMedia && window.matchMedia('(max-width: 1024px)').matches;
+    var v = String(mobile ? o.startMobile : o.start).trim().toLowerCase();
+    if (v === 'center' || v === 'centre' || v === 'middle') return Math.floor((n - 1) / 2);
+    if (v === 'last') return n - 1;
+    var num = parseInt(v, 10);
+    return num > 0 ? Math.min(n, num) - 1 : 0;
+  };
+
+  Carousel.prototype.jumpTo = function (i) {
+    var vp = this.viewport, card = this.cards[i];
+    if (!card) return;
+    vp.style.scrollBehavior = 'auto';   // place it instantly, no scroll animation on load
+    vp.scrollLeft = this.o.layout === 'row' ? card.offsetLeft : card.offsetLeft - (vp.clientWidth - card.offsetWidth) / 2;
+    vp.style.scrollBehavior = '';
+  };
+
+  Carousel.prototype.applyStart = function () {
+    var self = this, i = this.startIndex();
+    if (!i) return;
+    this.jumpTo(i);
+    // re-place once everything (fonts, images) has loaded, unless the visitor already moved it
+    var placed = this.viewport.scrollLeft;
+    window.addEventListener('load', function () {
+      if (Math.abs(self.viewport.scrollLeft - placed) < 2) { self.jumpTo(i); self.update(); }
+    });
   };
 
   Carousel.prototype.arrow = function (dir, extra) {
@@ -1008,7 +1041,7 @@
      Code-block data-* attributes still win over CSS. */
   function applyCssSettings(o, root) {
     var data = o._data || {};
-    [['layout', '--igc-layout'], ['theme', '--igc-theme'], ['account', '--igc-account'], ['avatar', '--igc-avatar'], ['profile', '--igc-profile']].forEach(function (pair) {
+    [['layout', '--igc-layout'], ['theme', '--igc-theme'], ['account', '--igc-account'], ['avatar', '--igc-avatar'], ['profile', '--igc-profile'], ['start', '--igc-start'], ['startMobile', '--igc-start-mobile']].forEach(function (pair) {
       if (data[pair[0]] !== undefined) return;
       var v = cssSetting(root, pair[1]);
       if (v) o[pair[0]] = v;
