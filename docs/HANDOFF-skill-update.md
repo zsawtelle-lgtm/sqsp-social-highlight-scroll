@@ -7,8 +7,7 @@ Paste this file into a Claude chat that can edit the **squarespace-components** 
 Add the IG Carousel component to the `squarespace-components` skill.
 
 1. **Create `references/ig-carousel.md`** with the full contents of the install doc:
-   - Raw file (branch, until merged): https://raw.githubusercontent.com/zsawtelle-lgtm/sqsp-social-highlight-scroll/claude/ecstatic-allen-95wd16/docs/INSTALL.md
-   - Raw file (after merge to `main`): https://raw.githubusercontent.com/zsawtelle-lgtm/sqsp-social-highlight-scroll/main/docs/INSTALL.md
+   - Raw file: https://raw.githubusercontent.com/zsawtelle-lgtm/sqsp-social-highlight-scroll/main/docs/INSTALL.md
 
    Copy it as-is. It already follows `_TEMPLATE.md` (Basic install → Styling →
    For developers → Support). In the copy, change the relative links
@@ -19,7 +18,7 @@ Add the IG Carousel component to the `squarespace-components` skill.
 
    | Component | Repo | Doc | Status |
    |---|---|---|---|
-   | IG Carousel (Instagram-style post carousel) | `zsawtelle-lgtm/sqsp-social-highlight-scroll` | `references/ig-carousel.md` | Beta: verified on staging markup, not yet installed on a client site |
+   | IG Carousel (Instagram-style post carousel) | `zsawtelle-lgtm/sqsp-social-highlight-scroll` | `references/ig-carousel.md` | v1.3.0 — installed on swtldesignco.com staging, not yet on a client site |
 
 3. **Add `ig-carousel` to the component list in the skill's `description`** so it triggers.
    Suggested wording, inserted with the other component names:
@@ -41,8 +40,11 @@ Add the IG Carousel component to the `squarespace-components` skill.
   the list items / gallery sections / post sections directly, and only see the carousel
   on the live site, not in the editor.
 
-## Before first client install
+## Current state (v1.3.0)
 
-- [ ] Merge the `claude/ecstatic-allen-95wd16` branch into `main`.
-- [ ] Create release tag `v1.0.0` on `main` (the `@1` CDN URLs return 404 until it exists).
-- [ ] Install on swtldesignco.com staging and update "Deployed on" in the doc.
+- Released as `v1.3.0`; `@1` on jsDelivr serves it. Installed and verified on
+  swtldesignco.com/carousel-test-1 (staging).
+- Settings cheat sheet (Custom CSS route + code block route) is in the install doc
+  under "Settings cheat sheet".
+- Release cycle for updates: PR → merge to `main` → publish a `vX.Y.Z` release →
+  purge `https://purge.jsdelivr.net/gh/zsawtelle-lgtm/sqsp-social-highlight-scroll@1/src/ig-carousel.js` (and `.css`).

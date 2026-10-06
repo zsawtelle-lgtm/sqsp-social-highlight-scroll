@@ -1,5 +1,5 @@
 /* ==========================================================================
-   IG Carousel for Squarespace 7.1 — v1.3.0
+   IG Carousel for Squarespace 7.1 — v1.3.1
    Instagram-style post carousel built from native Squarespace content.
    https://github.com/zsawtelle-lgtm/sqsp-social-highlight-scroll
 
@@ -37,7 +37,7 @@
 
   if (window.IGCarousel && window.IGCarousel.version) return; // loaded twice
 
-  var VERSION = '1.3.0';
+  var VERSION = '1.3.1';
 
   var DEFAULTS = {
     idPrefix: 'ig-carousel',
@@ -869,6 +869,10 @@
       });
     });
 
+    // visible card inside the snap target (see .igc-card in the CSS)
+    var cardEl = el('div', 'igc-card');
+    while (art.firstChild) cardEl.appendChild(art.firstChild);
+    art.appendChild(cardEl);
     return art;
   };
 
