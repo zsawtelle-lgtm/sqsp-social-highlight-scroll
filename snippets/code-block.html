@@ -6,11 +6,20 @@
        data-avatar          "first-image" = each gallery's first image is
                             the profile picture and its alt text the account
                             name. Delete it to use the Footer account.
+       data-per-view-*      optional: posts across per screen size
+                            (wide ≥1600 / desktop / tablet / mobile)
        <p> lines            one caption per post, in order. Use <br> for
                             extra lines like  location: Boston, MA
      Keep "hidden" so the captions never flash on the page.
      =================================================================== -->
-<div data-ig-carousel data-sections="3" data-avatar="first-image" hidden>
+<div data-ig-carousel
+     data-sections="3"
+     data-avatar="first-image"
+     data-per-view-wide="5"
+     data-per-view="3"
+     data-per-view-tablet="2"
+     data-per-view-mobile="1.2"
+     hidden>
   <p>Caption for post 1</p>
   <p>Caption for post 2</p>
   <p>Caption for post 3</p>

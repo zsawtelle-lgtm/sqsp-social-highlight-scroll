@@ -1,5 +1,5 @@
 /* ==========================================================================
-   IG Carousel for Squarespace 7.1 — v1.2.0
+   IG Carousel for Squarespace 7.1 — v1.3.0
    Instagram-style post carousel built from native Squarespace content.
    https://github.com/zsawtelle-lgtm/sqsp-social-highlight-scroll
 
@@ -37,7 +37,7 @@
 
   if (window.IGCarousel && window.IGCarousel.version) return; // loaded twice
 
-  var VERSION = '1.2.0';
+  var VERSION = '1.3.0';
 
   var DEFAULTS = {
     idPrefix: 'ig-carousel',
@@ -52,9 +52,10 @@
     layout: 'focus',        // focus = one centred post, neighbours peek (Framer look)
                             // row   = several posts side by side
     cardWidth: '',          // focus layout card width, e.g. "420px" (default 380px)
-    perView: 3,             // row layout: posts visible on desktop
-    perViewTablet: 2,
-    perViewMobile: 1.12,
+    perViewWide: 5,         // posts visible ≥ 1600px
+    perView: 3,             // 1025–1599px (focus layout: card shrinks to fit, max cardWidth)
+    perViewTablet: 2,       // 641–1024px
+    perViewMobile: 1.2,     // ≤ 640px (decimal = next post peeks in)
     theme: 'light',         // light | dark | section
     captionLines: 2,        // lines shown before the caption is clipped "…"
     captionExpand: true,    // click caption to read the whole thing
@@ -471,9 +472,11 @@
     if (o._gap) root.style.setProperty('--igc-gap-native', o._gap);
     root.style.setProperty('--igc-caption-lines', o.captionLines);
     if (o.cardWidth) root.style.setProperty('--igc-card-width', /^\d+$/.test(String(o.cardWidth)) ? o.cardWidth + 'px' : o.cardWidth);
-    root.style.setProperty('--igc-per-view', o.perView);
-    root.style.setProperty('--igc-per-view-tablet', o.perViewTablet);
-    root.style.setProperty('--igc-per-view-mobile', o.perViewMobile);
+    // fallbacks only: --igc-per-view* set in Custom CSS win without !important
+    root.style.setProperty('--igc-per-view-wide-js', o.perViewWide);
+    root.style.setProperty('--igc-per-view-js', o.perView);
+    root.style.setProperty('--igc-per-view-tablet-js', o.perViewTablet);
+    root.style.setProperty('--igc-per-view-mobile-js', o.perViewMobile);
     if (this.posts.length < o.perView) root.setAttribute('data-centered', 'true');
 
     var vp = this.viewport = el('div', 'igc-viewport');
@@ -548,6 +551,10 @@
       this.active = best;
       this.cards.forEach(function (c, i) {
         c.classList.toggle('is-active', i === best);
+        c.classList.toggle('is-before', i < best);   // side posts shrink toward the centre post
+        c.classList.toggle('is-after', i > best);
+        // posts further out also slide in by the space the shrunken posts freed up
+        c.style.setProperty('--_far', Math.max(0, Math.abs(i - best) - 1));
         c.setAttribute('aria-hidden', focus && i !== best ? 'true' : 'false');
       });
       var self = this;

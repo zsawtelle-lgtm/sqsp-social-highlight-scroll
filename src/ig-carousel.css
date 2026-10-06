@@ -1,5 +1,5 @@
 /* ==========================================================================
-   IG Carousel for Squarespace 7.1 — v1.1.0
+   IG Carousel for Squarespace 7.1 — v1.3.0
    https://github.com/zsawtelle-lgtm/sqsp-social-highlight-scroll
    Every class, variable and keyframe is prefixed "igc-" so nothing collides
    with the template or with other plugins.
@@ -25,10 +25,14 @@
   --_gap: var(--igc-gap, var(--igc-gap-native, 24px));
   --igc-peek-scale: 0.88;       /* "focus" layout: size of side posts        */
   --igc-peek-opacity: 0.45;     /* "focus" layout: fade of side posts        */
-  --igc-per-view: 3;            /* "row" layout: posts visible on desktop   */
-  --igc-per-view-tablet: 2;     /* "row" layout: ≤ 1024px                    */
-  --igc-per-view-mobile: 1.12;  /* "row" layout: ≤ 640px (decimal = peek)   */
-  --igc-max-width: 1200px;
+  /* Posts visible per screen size (both layouts). Set any of these in Custom
+     CSS on the section anchor or .igc — no !important needed:
+       --igc-per-view-wide    ≥ 1600px            default 5
+       --igc-per-view         1025–1599px         default 3
+       --igc-per-view-tablet  641–1024px          default 2
+       --igc-per-view-mobile  ≤ 640px             default 1.2 (decimal = peek)
+     --igc-max-width: unset = fill the block it sits in. */
+  --_n: var(--igc-per-view, var(--igc-per-view-js, 3));
   /* --igc-aspect: unset by default → the "aspect" option (4 / 5) */
   --_ratio: var(--igc-aspect, var(--igc-ratio-js, 4 / 5));
 
@@ -63,7 +67,7 @@
   container-type: inline-size;
   position: relative;
   width: 100%;
-  max-width: var(--igc-max-width);
+  max-width: var(--igc-max-width, none);
   margin: 0 auto;
   font-family: var(--igc-font, inherit);
   font-size: var(--igc-font-size);
@@ -151,7 +155,12 @@
 }
 
 /* Layout: focus (default) — one centred post, neighbours peek & fade */
-.igc[data-layout="focus"] { --_cw: min(var(--igc-card-width), 100cqw - 64px); }
+@media (min-width: 1600px) { .igc { --_n: var(--igc-per-view-wide, var(--igc-per-view-wide-js, 5)); } }
+@media (max-width: 1024px) { .igc { --_n: var(--igc-per-view-tablet, var(--igc-per-view-tablet-js, 2)); } }
+@media (max-width: 640px)  { .igc { --_n: var(--igc-per-view-mobile, var(--igc-per-view-mobile-js, 1.2)); } }
+
+/* focus: card sized so --_n posts fit across, never wider than --igc-card-width */
+.igc[data-layout="focus"] { --_cw: min(var(--igc-card-width), (100cqw - (var(--_n) - 1) * var(--_gap)) / var(--_n)); }
 .igc[data-layout="focus"] .igc-viewport { padding-inline: calc((100cqw - var(--_cw)) / 2); }
 .igc[data-layout="focus"] .igc-post {
   flex: 0 0 var(--_cw);
@@ -163,17 +172,23 @@
   cursor: pointer;
 }
 .igc[data-layout="focus"] .igc-post:not(.is-active) > * { pointer-events: none; }
+.igc[data-layout="focus"] .igc-post.is-before {
+  transform-origin: right center;
+  transform: translateX(calc(var(--_far, 0) * var(--_cw) * (1 - var(--igc-peek-scale)))) scale(var(--igc-peek-scale));
+}
+.igc[data-layout="focus"] .igc-post.is-after {
+  transform-origin: left center;
+  transform: translateX(calc(var(--_far, 0) * var(--_cw) * (var(--igc-peek-scale) - 1))) scale(var(--igc-peek-scale));
+}
 .igc[data-layout="focus"] .igc-post:not(.is-active) .igc-arrow { opacity: 0; }
 
 /* Layout: row — several posts side by side */
 .igc[data-layout="row"] .igc-post {
-  --_n: var(--igc-per-view);
   flex: 0 0 calc((100% - (var(--_n) - 1) * var(--_gap)) / var(--_n));
   scroll-snap-align: start;
 }
 .igc[data-layout="row"][data-centered="true"] .igc-viewport { justify-content: center; }
-@media (max-width: 1024px) { .igc[data-layout="row"] .igc-post { --_n: var(--igc-per-view-tablet); } }
-@media (max-width: 640px)  { .igc[data-layout="row"] .igc-post { --_n: var(--igc-per-view-mobile); scroll-snap-align: center; } }
+@media (max-width: 640px)  { .igc[data-layout="row"] .igc-post { scroll-snap-align: center; } }
 
 /* --------------------------------------------------------------- Header */
 .igc-head {

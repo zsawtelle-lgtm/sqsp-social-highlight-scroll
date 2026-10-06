@@ -13,6 +13,10 @@
   --igc-aspect: 4 / 5;          /* 1 / 1 | 4 / 5 | 16 / 9 | 9 / 16 */
   --igc-theme: light;           /* light | dark | section */
   --igc-gap: 24px;              /* delete to use Squarespace's item spacing */
+  --igc-per-view-wide: 5;       /* posts across ≥ 1600px */
+  --igc-per-view: 3;            /* 1025–1599px */
+  --igc-per-view-tablet: 2;     /* 641–1024px */
+  --igc-per-view-mobile: 1.2;   /* ≤ 640px */
 }
 
 /* XX.2 Single profile for one carousel (instead of the Footer account) */

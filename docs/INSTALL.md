@@ -1,7 +1,7 @@
 # IG Carousel
 
 Instagram-style post carousels built from native Squarespace content.
-Repo: <https://github.com/zsawtelle-lgtm/sqsp-social-highlight-scroll> · Version **1.2.0** · Status: **beta: installed on swtldesignco.com staging**
+Repo: <https://github.com/zsawtelle-lgtm/sqsp-social-highlight-scroll> · Version **1.3.0** · Status: **beta: installed on swtldesignco.com staging**
 
 ---
 
@@ -194,10 +194,11 @@ Priority, lowest to highest: Footer `IGCarouselConfig` → Footer `carousels['an
 | `data-aspect` | `4:5` | `1:1` `4:5` `16:9` `9:16` `native` `w:h` | Media ratio. `native` = the list's Image ratio setting, or the measured gallery tile |
 | `data-layout` | `focus` | `focus` `row` | One centred post with faded neighbours, or several side by side |
 | `data-theme` | `light` | `light` `dark` `section` | `dark` = Framer reference look; `section` = the section's colour theme |
-| `data-card-width` | `380px` | CSS length | Card width (focus layout) |
-| `data-per-view` | `3` | number | Posts visible on desktop (row layout) |
-| `data-per-view-tablet` | `2` | number | ≤1024px (row layout) |
-| `data-per-view-mobile` | `1.12` | number | ≤640px; decimals let the next post peek (row layout) |
+| `data-card-width` | `380px` | CSS length | Largest card width in the focus layout |
+| `data-per-view-wide` | `5` | number | Posts across on large desktops (≥1600px) |
+| `data-per-view` | `3` | number | Posts across on laptops/desktops (1025–1599px) |
+| `data-per-view-tablet` | `2` | number | Posts across on tablets (641–1024px) |
+| `data-per-view-mobile` | `1.2` | number | Posts across on phones (≤640px); decimals let the neighbours peek |
 | `data-verified` | `false` | `true` `false` | Blue check |
 | `data-avatar-ring` | `false` | `true` `false` | Story-ring gradient |
 | `data-location` | — | text | Line under the name |
@@ -257,6 +258,8 @@ example is in [`snippets/custom-css-examples.css`](../snippets/custom-css-exampl
 | `--igc-theme` | `light` | Colour theme |
 | `--igc-account` / `--igc-avatar` / `--igc-profile` | — | Single-profile name, picture, link (`--igc-avatar: first-image` also works) |
 | `--igc-gap` | Squarespace spacing, else `24px` | Space between posts. Unset = the list's "space between items" or the gallery's spacing slider |
+| `--igc-per-view-wide` / `--igc-per-view` / `--igc-per-view-tablet` / `--igc-per-view-mobile` | `5` / `3` / `2` / `1.2` | Posts across at ≥1600 / 1025–1599 / 641–1024 / ≤640px. Both layouts. No `!important` needed |
+| `--igc-max-width` | none (fills its block) | Cap the carousel width, e.g. `1200px` |
 
 **Typography.** Fonts follow **Site Styles**. Letter-spacing is reset to `normal`
 because Squarespace paragraph styles often add loose tracking.
@@ -278,7 +281,7 @@ because Squarespace paragraph styles often add loose tracking.
 
 | Variable | Default | Controls |
 |---|---|---|
-| `--igc-card-width` | `380px` | Focus-layout card width |
+| `--igc-card-width` | `380px` | Largest card width in the focus layout. Cards shrink below it so the per-view number fits |
 | `--igc-card-radius` | `20px` | Card corners |
 | `--igc-card-bg` / `--igc-text` | theme | Card and text colour |
 | `--igc-heart` | `#ff3040` | Liked heart colour |
@@ -287,6 +290,21 @@ because Squarespace paragraph styles often add loose tracking.
 | `--igc-peek-scale` / `--igc-peek-opacity` | `0.88` / `0.45` | Side posts in focus layout |
 
 Avoid `calc()` with `var()` in Custom CSS (Squarespace's LESS compiler rejects it).
+
+**How many posts show (focus layout):** the carousel fills its block and sizes
+the centre card so the per-view number fits across, up to `--igc-card-width`. Side
+posts are faded and slightly smaller. To show more neighbours, raise the per-view
+number or lower `--igc-card-width`:
+
+```css
+#ig-carousel {
+  --igc-per-view-wide: 5;
+  --igc-per-view: 3;
+  --igc-per-view-tablet: 2;
+  --igc-per-view-mobile: 1.2;
+}
+#ig-carousel .igc { --igc-card-width: 340px; }
+```
 
 ## Targeting
 
@@ -336,7 +354,7 @@ without `data-`), plus:
 | `IGCarousel.init()` | function | Build any carousels not yet built |
 | `IGCarousel.destroy()` | function | Remove all carousels and restore the original sections |
 | `IGCarousel.refresh()` | function | `destroy()` then `init()` |
-| `IGCarousel.version` | string | `1.2.0` |
+| `IGCarousel.version` | string | `1.3.0` |
 
 The plugin watches `body.class` for `sqs-edit-mode-active` and tears down or rebuilds automatically.
 
