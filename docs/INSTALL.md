@@ -1,7 +1,7 @@
 # IG Carousel
 
 Instagram-style post carousels built from native Squarespace content.
-Repo: <https://github.com/zsawtelle-lgtm/sqsp-social-highlight-scroll> · Version **1.0.0** · Status: **beta, not yet tested on a live site**
+Repo: <https://github.com/zsawtelle-lgtm/sqsp-social-highlight-scroll> · Version **1.0.0** · Status: **beta: verified against staging markup (swtldesignco.com), not yet installed**
 
 ---
 
@@ -145,7 +145,7 @@ Per-instance settings override [global settings](#global-settings).
 | Attribute | Default | Options | Description |
 |---|---|---|---|
 | `data-sections` | `auto` | number or `auto` | Sections below to turn into posts (`auto` = consecutive gallery sections) |
-| `data-aspect` | `4:5` | `1:1` `4:5` `16:9` `9:16` `native` `w:h` | Media ratio. `native` copies the ratio from the Squarespace section |
+| `data-aspect` | `4:5` | `1:1` `4:5` `16:9` `9:16` `native` `w:h` | Media ratio. `native` uses the list section's Image ratio setting (or the measured gallery ratio, snapped to the nearest standard) |
 | `data-layout` | `focus` | `focus` `row` | One centred post with faded neighbours, or several side by side |
 | `data-card-width` | `380px` | any CSS length | Card width (focus layout) |
 | `data-per-view` | `3` | number | Posts visible on desktop (row layout) |
@@ -288,22 +288,20 @@ The plugin watches `body.class` for `sqs-edit-mode-active` and tears down or reb
 
 | Site | Methods | Notes |
 |---|---|---|
-| swtldesignco.com/carousel-test-1 (staging) | A, B | Not yet installed |
+| swtldesignco.com/carousel-test-1 (staging) | A, C | Not installed yet. Plugin injected in a headless browser: list → 4 posts; code block + 3 gallery sections → 3 posts × 4 photos. No errors at desktop or phone width. |
 
 ## Open items
 
-- **Not tested on a live Squarespace site yet.** Tested only against mock 7.1 markup
-  (`demo/index.html`) in headless Chromium. These selectors are unverified:
-  - list carousel: `.user-items-list`, `.user-items-list-carousel__slide`,
-    `.list-item-content__title/__description/__button`, `.user-items-list-carousel__media-container`
-  - gallery: `.gallery-section`, `.gallery-grid-item` (and masonry/slideshow/reel/strips variants), `figcaption` / `.gallery-caption`
-  - blocks: `.sqs-block-image/-video/-code/-html`, `.fe-block`
-  - editor: `body.sqs-edit-mode-active`
-- Whether the section **Anchor Link** puts the `id` on the `<section>` itself (the plugin
-  also accepts it on any element inside the section).
+- **Verified on live 7.1 markup (staging):** the section anchor `id` is on the `<section>`;
+  list classes `.user-items-list`, `.user-items-list-carousel__slide.list-item`,
+  `.list-item-content__title/__description/__button`, `[data-media-aspect-ratio]`;
+  gallery classes `.gallery-section`, `.gallery-grid-item`; images use `data-src`/`data-image`.
+- **Still unverified:** gallery layouts other than Grid (masonry/slideshow/reel/strips),
+  gallery image captions, `.sqs-block-video` / `.sqs-block-image` inside Fluid Engine posts,
+  and the editor class `body.sqs-edit-mode-active`.
 - Whether moving a **native Squarespace video block** into a slide keeps its player working.
 - Video items inside **gallery sections** are not supported (read via `data-video-url` only).
-- `aspect: 'native'` reads the rendered size of the first image container. Not verified
-  against each list layout.
+- `aspect: 'native'` on gallery/Fluid Engine posts measures the first image container.
+  Only verified on Grid galleries.
 - **Release tag:** after merging to `main`, tag `v1.0.0` so the `@1` jsDelivr URLs resolve.
 - Add this component to the `squarespace-components` skill (`references/INDEX.md` + this doc).

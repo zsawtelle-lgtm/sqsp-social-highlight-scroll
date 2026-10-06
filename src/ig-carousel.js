@@ -167,7 +167,7 @@
     }
     if (focal) {
       var f = String(focal).split(',');
-      if (f.length === 2) img.style.objectPosition = (parseFloat(f[0]) * 100) + '% ' + (parseFloat(f[1]) * 100) + '%';
+      if (f.length === 2 && !isNaN(parseFloat(f[0])) && !isNaN(parseFloat(f[1]))) img.style.objectPosition = (parseFloat(f[0]) * 100) + '% ' + (parseFloat(f[1]) * 100) + '%';
     }
     return img;
   }
@@ -216,10 +216,18 @@
     var m = /^(\d+(?:\.\d+)?)\s*[:x/]\s*(\d+(?:\.\d+)?)$/.exec(String(aspect || '').trim());
     return m ? m[1] + ' / ' + m[2] : null;
   }
+  /* Measured sizes snap to the nearest standard ratio (586×587 → 1 / 1). */
+  var STANDARD_RATIOS = [[1, 1], [4, 5], [3, 4], [2, 3], [9, 16], [5, 4], [4, 3], [3, 2], [16, 9]];
   function measureRatio(node) {
     if (!node) return null;
     var r = node.getBoundingClientRect();
-    return r.width > 10 && r.height > 10 ? (Math.round(r.width) + ' / ' + Math.round(r.height)) : null;
+    if (r.width < 10 || r.height < 10) return null;
+    var k = r.width / r.height;
+    for (var i = 0; i < STANDARD_RATIOS.length; i++) {
+      var sr = STANDARD_RATIOS[i];
+      if (Math.abs(k / (sr[0] / sr[1]) - 1) < 0.03) return sr[0] + ' / ' + sr[1];
+    }
+    return Math.round(r.width) + ' / ' + Math.round(r.height);
   }
 
   function isEditMode() {
@@ -884,7 +892,10 @@
 
     if (list) {
       measureNode = $('.user-items-list-carousel__media-container, .list-image, .user-items-list-simple__media, .list-item img', list);
-      if (o.aspect === 'native') o._ratio = measureRatio(measureNode);
+      if (o.aspect === 'native') {
+        var nativeRatio = $('[data-media-aspect-ratio]', list);   // the list section's Image ratio setting
+        o._ratio = (nativeRatio && ratioOf(nativeRatio.getAttribute('data-media-aspect-ratio'))) || measureRatio(measureNode);
+      }
       posts = postsFromList(list);
       mount = function (node) { list.parentNode.insertBefore(node, list.nextSibling); };
       hidden.push(list);

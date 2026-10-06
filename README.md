@@ -32,6 +32,7 @@ See the full guide: **[docs/INSTALL.md](docs/INSTALL.md)**.
 | `src/ig-carousel.css` | Styles; every colour and size is a `--igc-*` variable |
 | `snippets/` | Copy-paste snippets for Code Injection, the Code Block and Custom CSS |
 | `docs/INSTALL.md` | Installation guide, options, testing checklist |
+| `docs/HANDOFF-skill-update.md` | Paste into Claude chat to add this component to the squarespace-components skill |
 | `demo/index.html` | Offline test page with mock Squarespace markup for all three setups |
 
 ## CDN
