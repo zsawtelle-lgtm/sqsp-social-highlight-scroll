@@ -1,0 +1,25 @@
+<!-- ===================================================================
+     IG Carousel — paste into:
+     Settings → Advanced → Code Injection → FOOTER (sitewide)
+     Global settings (window.IGCarouselConfig) must stay ABOVE the script.
+     =================================================================== -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/zsawtelle-lgtm/sqsp-social-highlight-scroll@1/src/ig-carousel.css">
+<script>
+  window.IGCarouselConfig = {
+    /* ---- Defaults for every carousel on the site ---- */
+    account: 'your.account',          // name shown top-left of every post
+    avatar:  '',                      // profile image URL (see INSTALL.md: "Getting an image URL")
+    profile: 'https://www.instagram.com/your.account/', // where the account name links ('' = no link)
+    aspect:  '4:5',                   // 1:1 | 4:5 | 16:9 | 9:16 | native
+    theme:   'light',                 // light | dark | section
+    layout:  'focus'                  // focus (one centred post) | row (several side by side)
+
+    /* ---- Per-carousel overrides, keyed by section anchor id ----
+    , carousels: {
+      'ig-carousel-2': { theme: 'dark', aspect: '1:1' },
+      'ig-carousel-3': { layout: 'row', perView: 3 }
+    }
+    */
+  };
+</script>
+<script defer src="https://cdn.jsdelivr.net/gh/zsawtelle-lgtm/sqsp-social-highlight-scroll@1/src/ig-carousel.js"></script>

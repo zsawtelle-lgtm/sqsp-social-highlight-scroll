@@ -1,0 +1,461 @@
+/* ==========================================================================
+   IG Carousel for Squarespace 7.1 — v1.0.0
+   https://github.com/zsawtelle-lgtm/sqsp-social-highlight-scroll
+   Every class, variable and keyframe is prefixed "igc-" so nothing collides
+   with the template or with other plugins.
+   Override any --igc-* variable in Custom CSS, e.g.
+     #ig-carousel-2 .igc { --igc-card-width: 420px; --igc-heart: #e1306c; }
+   ========================================================================== */
+
+.igc {
+  /* ---- Layout ---------------------------------------------------------- */
+  --igc-card-width: 380px;      /* "focus" layout: width of the centre card */
+  --igc-gap: 24px;              /* space between posts                      */
+  --igc-peek-scale: 0.88;       /* "focus" layout: size of side posts        */
+  --igc-peek-opacity: 0.45;     /* "focus" layout: fade of side posts        */
+  --igc-per-view: 3;            /* "row" layout: posts visible on desktop   */
+  --igc-per-view-tablet: 2;     /* "row" layout: ≤ 1024px                    */
+  --igc-per-view-mobile: 1.12;  /* "row" layout: ≤ 640px (decimal = peek)   */
+  --igc-max-width: 1200px;
+  --igc-ratio: 4 / 5;           /* set by the "aspect" option               */
+
+  /* ---- Card (light theme) ---------------------------------------------- */
+  --igc-card-bg: #ffffff;
+  --igc-card-border: 1px solid rgba(0, 0, 0, 0.1);
+  --igc-card-radius: 20px;
+  --igc-card-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+  --igc-media-bg: #efefef;
+  --igc-text: #0c1014;
+  --igc-muted: #737373;
+  --igc-font: inherit;          /* follows Site Styles; set a font here only if you must */
+  --igc-font-size: 14px;
+  --igc-avatar-size: 32px;
+  --igc-avatar-ring: linear-gradient(45deg, #feda75, #fa7e1e, #d62976, #962fbf, #4f5bd5);
+  --igc-icon-size: 24px;
+
+  /* ---- Accents --------------------------------------------------------- */
+  --igc-heart: #ff3040;
+  --igc-dot: rgba(255, 255, 255, 0.5);
+  --igc-dot-active: #ffffff;
+  --igc-arrow-bg: rgba(0, 0, 0, 0.4);
+  --igc-arrow-color: #ffffff;
+  --igc-arrow-size: 32px;
+  --igc-caption-lines: 2;
+
+  container-type: inline-size;
+  position: relative;
+  width: 100%;
+  max-width: var(--igc-max-width);
+  margin: 0 auto;
+  font-family: var(--igc-font);
+  font-size: var(--igc-font-size);
+  line-height: 1.25;
+  color: var(--igc-text);
+  -webkit-font-smoothing: antialiased;
+  text-align: left;
+}
+
+/* Dark theme = the Framer reference look */
+.igc[data-theme="dark"] {
+  --igc-card-bg: #000000;
+  --igc-card-border: 1px solid rgba(235, 235, 235, 0.12);
+  --igc-card-shadow: none;
+  --igc-media-bg: #0a0a0a;
+  --igc-text: #ebebeb;
+  --igc-muted: #a8a8a8;
+}
+
+/* "section" theme: borrow the Squarespace section's own colour theme */
+.igc[data-theme="section"] {
+  --igc-card-bg: transparent;
+  --igc-card-border: 1px solid color-mix(in srgb, currentColor 18%, transparent);
+  --igc-card-shadow: none;
+  --igc-text: currentColor;
+  --igc-muted: color-mix(in srgb, currentColor 60%, transparent);
+}
+
+.igc *,
+.igc *::before,
+.igc *::after { box-sizing: border-box; }
+
+/* Button reset — placed before component rules so they always win, while
+   still beating a template's generic `button {}` styles. */
+.igc :where(button) {
+  appearance: none;
+  -webkit-appearance: none;
+  background: none;
+  border: 0;
+  border-radius: 0;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+  min-height: 0;
+  box-shadow: none;
+  font: inherit;
+  letter-spacing: normal;
+  text-transform: none;
+  line-height: 1;
+  cursor: pointer;
+  color: inherit;
+}
+.igc button:focus-visible,
+.igc a:focus-visible,
+.igc-viewport:focus-visible { outline: 2px solid #0095f6; outline-offset: 2px; }
+
+/* ---------------------------------------------------------------- Track */
+.igc-viewport {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--igc-gap);
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  scrollbar-width: none;
+  padding-block: 4px 16px;          /* room for card shadow */
+  -webkit-overflow-scrolling: touch;
+}
+.igc-viewport::-webkit-scrollbar { display: none; }
+
+.igc-post {
+  position: relative;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--igc-card-bg);
+  border: var(--igc-card-border);
+  border-radius: var(--igc-card-radius);
+  box-shadow: var(--igc-card-shadow);
+  overflow: hidden;
+  transition: transform 0.35s ease, opacity 0.35s ease;
+}
+
+/* Layout: focus (default) — one centred post, neighbours peek & fade */
+.igc[data-layout="focus"] { --_cw: min(var(--igc-card-width), 100cqw - 64px); }
+.igc[data-layout="focus"] .igc-viewport { padding-inline: calc((100cqw - var(--_cw)) / 2); }
+.igc[data-layout="focus"] .igc-post {
+  flex: 0 0 var(--_cw);
+  scroll-snap-align: center;
+}
+.igc[data-layout="focus"] .igc-post:not(.is-active) {
+  transform: scale(var(--igc-peek-scale));
+  opacity: var(--igc-peek-opacity);
+  cursor: pointer;
+}
+.igc[data-layout="focus"] .igc-post:not(.is-active) > * { pointer-events: none; }
+.igc[data-layout="focus"] .igc-post:not(.is-active) .igc-arrow { opacity: 0; }
+
+/* Layout: row — several posts side by side */
+.igc[data-layout="row"] .igc-post {
+  --_n: var(--igc-per-view);
+  flex: 0 0 calc((100% - (var(--_n) - 1) * var(--igc-gap)) / var(--_n));
+  scroll-snap-align: start;
+}
+.igc[data-layout="row"][data-centered="true"] .igc-viewport { justify-content: center; }
+@media (max-width: 1024px) { .igc[data-layout="row"] .igc-post { --_n: var(--igc-per-view-tablet); } }
+@media (max-width: 640px)  { .igc[data-layout="row"] .igc-post { --_n: var(--igc-per-view-mobile); scroll-snap-align: center; } }
+
+/* --------------------------------------------------------------- Header */
+.igc-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 56px;
+  padding: 0 12px;
+}
+.igc-avatar {
+  flex: 0 0 auto;
+  width: var(--igc-avatar-size);
+  height: var(--igc-avatar-size);
+  border-radius: 50%;
+}
+.igc-avatar[data-ring="true"] {
+  width: calc(var(--igc-avatar-size) + 6px);
+  height: calc(var(--igc-avatar-size) + 6px);
+  padding: 2px;
+  background: var(--igc-avatar-ring);
+}
+.igc-avatar img,
+.igc-avatar span {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  background: var(--igc-media-bg);
+}
+.igc-avatar[data-ring="true"] img,
+.igc-avatar[data-ring="true"] span { border: 2px solid var(--igc-card-bg); }
+.igc-avatar span {           /* initial-letter fallback when no image */
+  display: grid;
+  place-items: center;
+  font-weight: 600;
+  font-size: calc(var(--igc-avatar-size) * 0.42);
+  text-transform: uppercase;
+}
+.igc-who { display: flex; flex-direction: column; justify-content: center; min-width: 0; gap: 2px; }
+.igc-account {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 600;
+  color: inherit;
+  text-decoration: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+a.igc-account:hover { opacity: 0.7; }
+.igc-verified { width: 12px; height: 12px; flex: 0 0 auto; }
+.igc-location { font-size: 12px; opacity: 0.85; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.igc-more { margin-left: auto; width: 28px; height: 28px; display: grid; place-items: center; }
+.igc-more svg { width: 20px; height: 20px; }
+
+/* ---------------------------------------------------------------- Media */
+.igc-media {
+  position: relative;
+  aspect-ratio: var(--igc-ratio);
+  background: var(--igc-media-bg);
+  overflow: hidden;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.igc-media-track {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  scrollbar-width: none;
+  overscroll-behavior-x: contain;   /* swiping a photo never moves the post row */
+}
+.igc-media-track::-webkit-scrollbar { display: none; }
+.igc-slide {
+  position: relative;
+  flex: 0 0 100%;
+  width: 100%;
+  height: 100%;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+  overflow: hidden;
+}
+.igc-slide > img,
+.igc-slide > video,
+.igc-slide > iframe {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border: 0;
+  -webkit-user-drag: none;
+}
+.igc-slide > iframe { pointer-events: none; }   /* background-style embeds */
+
+/* Native Squarespace video / embed blocks moved into a slide */
+.igc-slide--block > *,
+.igc-slide--block .sqs-block-content,
+.igc-slide--block .sqs-video-wrapper,
+.igc-slide--block .video-player,
+.igc-slide--block .native-video-player,
+.igc-slide--block .sqs-native-video { width: 100% !important; height: 100% !important; padding: 0 !important; margin: 0 !important; }
+.igc-slide--block iframe,
+.igc-slide--block video { position: absolute; inset: 0; width: 100% !important; height: 100% !important; object-fit: cover; }
+
+/* Mid-image arrows: switch POSTS (Framer-reference position) */
+.igc-arrow {
+  position: absolute;
+  top: 50%;
+  z-index: 5;
+  width: var(--igc-arrow-size);
+  height: var(--igc-arrow-size);
+  margin-top: calc(var(--igc-arrow-size) / -2);
+  border-radius: 50%;
+  background: var(--igc-arrow-bg);
+  color: var(--igc-arrow-color);
+  display: grid;
+  place-items: center;
+  transition: opacity 0.2s, transform 0.2s, background 0.2s;
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+}
+.igc-arrow svg { width: 20px; height: 20px; }
+.igc-arrow:hover { background: rgba(0, 0, 0, 0.6); }
+.igc-arrow:active { transform: scale(0.92); }
+.igc-arrow--prev { left: 12px; }
+.igc-arrow--next { right: 12px; }
+.igc-arrow[hidden] { display: none; }
+
+/* "row" layout: arrows sit on the carousel edges instead */
+.igc-arrow--edge { --igc-arrow-size: 40px; background: var(--igc-card-bg); color: var(--igc-text); border: var(--igc-card-border); box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15); }
+.igc-arrow--edge:hover { background: var(--igc-card-bg); transform: scale(1.06); }
+.igc-arrow--edge[disabled] { opacity: 0; pointer-events: none; }
+
+.igc-counter {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 3;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 500;
+  pointer-events: none;
+}
+.igc-mute {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  z-index: 4;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
+  display: none;
+  place-items: center;
+}
+.igc-mute svg { width: 14px; height: 14px; }
+.igc-media[data-video="true"] .igc-mute { display: grid; }
+
+/* Dots: overlaid at the bottom of the image, switch PHOTOS in this post */
+.igc-dots {
+  position: absolute;
+  left: 50%;
+  bottom: 14px;
+  z-index: 4;
+  translate: -50% 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.igc .igc-dot {
+  position: relative;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--igc-dot);
+  box-shadow: 0 0 2px rgba(0, 0, 0, 0.35);
+  transition: background 0.2s, transform 0.2s;
+}
+.igc .igc-dot::after { content: ""; position: absolute; inset: -6px -3px; }   /* bigger tap target */
+.igc .igc-dot[aria-current="true"] { background: var(--igc-dot-active); transform: scale(1.2); }
+.igc .igc-dot[data-far="true"] { transform: scale(0.7); }
+
+/* Double-tap heart */
+.igc-burst {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 96px;
+  height: 96px;
+  margin: -48px 0 0 -48px;
+  z-index: 6;
+  color: #fff;
+  pointer-events: none;
+  opacity: 0;
+  filter: drop-shadow(0 4px 16px rgba(0, 0, 0, 0.3));
+}
+.igc-burst svg { width: 100%; height: 100%; }
+.igc-burst.is-on { animation: igc-burst 0.9s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
+@keyframes igc-burst {
+  0%   { opacity: 0; transform: scale(0.2); }
+  15%  { opacity: 1; transform: scale(1.15); }
+  30%  { transform: scale(0.95); }
+  45%  { transform: scale(1); }
+  80%  { opacity: 1; transform: scale(1) translateY(0); }
+  100% { opacity: 0; transform: scale(0.6) translateY(-30px); }
+}
+
+/* -------------------------------------------------------------- Actions */
+.igc-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 14px 8px;
+}
+.igc-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: inherit;
+  font-weight: 600;
+  font-size: var(--igc-font-size);
+  text-decoration: none;
+}
+.igc-action svg {
+  display: block;
+  width: var(--igc-icon-size);
+  height: var(--igc-icon-size);
+  transition: transform 0.15s ease, opacity 0.15s;
+}
+.igc-action:hover svg { opacity: 0.6; }
+.igc-action:active svg { transform: scale(0.85); }
+.igc-save { margin-left: auto; }
+
+.igc-like .igc-heart-on { display: none; color: var(--igc-heart); }
+.igc-like.is-liked .igc-heart-off { display: none; }
+.igc-like.is-liked .igc-heart-on { display: block; }
+.igc-like.is-liked:hover svg { opacity: 1; }
+.igc[data-heart-animation="pop"] .igc-like.is-pop .igc-heart-on { animation: igc-pop 0.45s cubic-bezier(0.17, 0.89, 0.32, 1.28); }
+@keyframes igc-pop {
+  0%   { transform: scale(1); }
+  25%  { transform: scale(0.7); }
+  60%  { transform: scale(1.3); }
+  100% { transform: scale(1); }
+}
+.igc-save .igc-save-on,
+.igc-save.is-saved .igc-save-off { display: none; }
+.igc-save.is-saved .igc-save-on { display: block; }
+.igc-repost.is-reposted { color: #00ba7c; }
+
+/* Like count — rolls like an odometer when the heart is tapped */
+.igc-count {
+  display: inline-grid;
+  overflow: hidden;
+  height: 1.25em;
+  line-height: 1.25em;
+  font-variant-numeric: tabular-nums;
+}
+.igc-count > span { grid-area: 1 / 1; }
+.igc-count .is-out-up   { animation: igc-out-up 0.35s ease forwards; }
+.igc-count .is-in-up    { animation: igc-in-up 0.35s ease forwards; }
+.igc-count .is-out-down { animation: igc-out-down 0.35s ease forwards; }
+.igc-count .is-in-down  { animation: igc-in-down 0.35s ease forwards; }
+@keyframes igc-out-up   { to   { transform: translateY(-100%); opacity: 0; } }
+@keyframes igc-in-up    { from { transform: translateY(100%);  opacity: 0; } }
+@keyframes igc-out-down { to   { transform: translateY(100%);  opacity: 0; } }
+@keyframes igc-in-down  { from { transform: translateY(-100%); opacity: 0; } }
+
+/* ----------------------------------------------------------- Text area */
+.igc-body { padding: 0 14px 14px; display: flex; flex-direction: column; gap: 4px; }
+.igc-likes { font-weight: 600; }
+.igc-caption {
+  margin: 0;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: var(--igc-caption-lines);
+  line-clamp: var(--igc-caption-lines);
+  overflow: hidden;
+  text-overflow: ellipsis;          /* clipped text ends in "…" */
+  overflow-wrap: anywhere;
+  font-size: var(--igc-font-size);
+  line-height: 1.35;
+  color: inherit;
+}
+.igc-caption b { font-weight: 600; margin-right: 4px; }
+.igc[data-caption-expand="true"] .igc-caption { cursor: pointer; }
+.igc-caption.is-open { -webkit-line-clamp: unset; line-clamp: unset; display: block; }
+.igc-meta { color: var(--igc-muted); font-size: 12px; }
+
+/* ----------------------------------------------------- Source hiding */
+.igc-source-hidden { display: none !important; }
+
+/* ------------------------------------------------------ Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .igc-viewport, .igc-media-track { scroll-behavior: auto; }
+  .igc *, .igc *::before, .igc *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}

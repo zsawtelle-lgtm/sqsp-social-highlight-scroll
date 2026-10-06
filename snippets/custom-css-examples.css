@@ -1,0 +1,33 @@
+/* ===================================================================
+   Paste as its own numbered section in Design → Custom CSS.
+   Renumber "XX" to fit the site's table of contents, e.g.
+     XX. IG Carousel ................ instagram-style post carousels
+   Fonts and weights stay in Site Styles — do not set them here.
+   No calc() math with var() here: Squarespace's LESS compiler rejects it.
+   =================================================================== */
+
+/* ===== XX. IG CAROUSEL ===== */
+
+/* XX.1 All carousels — blue active dot like the Instagram app */
+.igc {
+  --igc-dot: rgba(0, 0, 0, 0.25);
+  --igc-dot-active: #0095f6;
+}
+
+/* XX.2 One carousel — wider card, brand heart colour, rounder corners */
+#ig-carousel-2 .igc {
+  --igc-card-width: 420px;
+  --igc-heart: #e1306c;
+  --igc-card-radius: 28px;
+}
+
+/* XX.3 One carousel — show 3 caption lines instead of 2 */
+#ig-carousel-3 .igc { --igc-caption-lines: 3; }
+
+/* XX.4 Focus layout — side posts less faded and bigger */
+.igc {
+  --igc-peek-opacity: 0.7;
+  --igc-peek-scale: 0.92;
+}
+
+/* Every variable is listed at the top of src/ig-carousel.css */
