@@ -1,12 +1,17 @@
 <!-- ===================================================================
-     IG Carousel — Code Block (Section / mixed-media mode)
+     IG Carousel — Code Block (Method C)
      Add a Code Block to the section ABOVE your post sections, stretch it
-     full width, and paste this. data-sections = how many sections below
-     become posts. Every data-* option is optional.
+     full width, and paste this.
+       data-sections        how many sections below become posts
+       data-avatar          "first-image" = each gallery's first image is
+                            the profile picture and its alt text the account
+                            name. Delete it to use the Footer account.
+       <p> lines            one caption per post, in order. Use <br> for
+                            extra lines like  location: Boston, MA
+     Keep "hidden" so the captions never flash on the page.
      =================================================================== -->
-<div data-ig-carousel
-     data-sections="3"
-     data-account="your.account"
-     data-aspect="4:5"
-     data-theme="light"
-     data-layout="focus"></div>
+<div data-ig-carousel data-sections="3" data-avatar="first-image" hidden>
+  <p>Caption for post 1</p>
+  <p>Caption for post 2</p>
+  <p>Caption for post 3</p>
+</div>

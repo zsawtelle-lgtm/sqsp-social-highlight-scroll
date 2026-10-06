@@ -3,23 +3,23 @@
 An Instagram-style highlight carousel for **Squarespace 7.1**, built from native
 Squarespace content. No third-party embed and no Instagram API.
 
-- Avatar + account name header, `•••` menu
+- Avatar + account name header: one account sitewide, or a different one per post (taken from each gallery's first image)
 - Each post has its own swipeable photo / video gallery, with **dots** that move through
   that post's photos only
 - **Middle arrows** move between posts
-- Heart · comment · repost · share · save row with editable like/comment counts
-- Heart fill + pop, odometer-style like count, count-up on scroll, double-tap heart burst
+- Heart · comment · repost · share · save row; heart fill + pop and double-tap heart burst
 - Caption clipped to 2 lines with "…" (click to expand)
 - Aspect ratios: **4:5 (default)**, 1:1, 16:9, 9:16, or the ratio set in Squarespace
 - Any number of carousels per page: `#ig-carousel-1`, `#ig-carousel-2`, …
 - Light, dark (Framer reference look) or the section's own colour theme
+- Layout, ratio, theme, account, spacing and typography all settable in Custom CSS
 
 ## Quick start
 
 1. Paste [`snippets/code-injection-footer.html`](snippets/code-injection-footer.html) into
    **Settings → Advanced → Code Injection → Footer** and set your account name and avatar.
 2. Add an **Auto Layout → Carousel** list section and give it the anchor link `ig-carousel-1`.
-3. Each list item is a post. Put the caption and a `likes: 1,204` line in the Description.
+3. Each list item is a post. Its Description is the caption.
 
 Need multiple photos per post, gallery sections, or mixed photo + video posts?
 See the full guide: **[docs/INSTALL.md](docs/INSTALL.md)**.

@@ -26,6 +26,14 @@
   button { background: #c00; color: #fff; padding: 12px 20px; border-radius: 4px; }
 </style>
 <link rel="stylesheet" href="../src/ig-carousel.css">
+<style>
+  /* Settings via Custom CSS (Design → Custom CSS on a real site) */
+  #ig-carousel-3 { --igc-layout: row; --igc-gap: 40px; }
+  #ig-carousel-4 { --igc-aspect: 1 / 1; --igc-theme: dark; }
+  /* imitate a template that adds loose paragraph letter-spacing */
+  .page-section { letter-spacing: 0.8px; }
+  p { font-family: "Courier New", monospace; }
+</style>
 <script>
   // Sitewide defaults (Settings → Developer Tools → Code Injection → Header)
   window.IGCarouselConfig = {
@@ -54,7 +62,7 @@
               </div></div>
               <div class="list-item-content"><div class="list-item-content__text-wrapper">
                 <h2 class="list-item-content__title">Spring launch</h2>
-                <div class="list-item-content__description"><p>New brand identity for a local bakery — logo, packaging and a whole lot of croissants. Swipe for the details and the behind-the-scenes process shots.</p><p>likes: 1,204</p><p>comments: 38</p></div>
+                <div class="list-item-content__description"><p>New brand identity for a local bakery — logo, packaging and a whole lot of croissants. Swipe for the details and the behind-the-scenes process shots.</p><p>location: Portland, Oregon</p></div>
               </div><div class="list-item-content__button-container"><a class="list-item-content__button sqs-button-element--primary" href="https://www.instagram.com/p/example">View</a></div></div>
             </li>
             <li class="user-items-list-carousel__slide list-item">
@@ -68,12 +76,12 @@
             <li class="user-items-list-carousel__slide list-item">
               <div class="user-items-list-carousel__media-container"><img class="user-items-list-carousel__media" data-src="media/post2-1.jpg" alt=""></div>
               <div class="list-item-content"><h2 class="list-item-content__title">Single photo post</h2>
-                <div class="list-item-content__description"><p>A one-image post. No dots appear when there is only one photo.</p><p>likes: 12.5k</p></div></div>
+                <div class="list-item-content__description"><p>A one-image post. No dots appear when there is only one photo.</p></div></div>
             </li>
             <li class="user-items-list-carousel__slide list-item">
               <div class="user-items-list-carousel__media-container"><img class="user-items-list-carousel__media" data-src="media/post3-1.jpg" alt=""></div>
               <div class="list-item-content"><h2 class="list-item-content__title">Video post</h2>
-                <div class="list-item-content__description"><p>Video via the "video:" line — the list image becomes the poster.</p><p>video: media/clip.mp4</p><p>likes: 87</p></div></div>
+                <div class="list-item-content__description"><p>Video via the "video:" line — the list image becomes the poster.</p><p>video: media/clip.mp4</p></div></div>
             </li>
             <li class="user-items-list-carousel__slide list-item">
               <div class="user-items-list-carousel__media-container"><img class="user-items-list-carousel__media" data-src="media/post3-2.jpg" alt=""></div>
@@ -94,7 +102,7 @@
 </section>
 <section class="page-section gallery-section dark" data-section-id="b2">
   <div class="content-wrapper"><div class="gallery-grid gallery-grid-wrapper">
-    <figure class="gallery-grid-item"><img data-src="media/post4-1.jpg" alt="Studio"><figcaption class="gallery-caption"><p>This is such a cool gallery! ❤️</p><p>likes: 325</p></figcaption></figure>
+    <figure class="gallery-grid-item"><img data-src="media/post4-1.jpg" alt="Studio"><figcaption class="gallery-caption"><p>This is such a cool gallery! ❤️</p></figcaption></figure>
     <figure class="gallery-grid-item"><img data-src="media/post4-2.jpg" alt=""></figure>
     <figure class="gallery-grid-item"><img data-src="media/post4-3.jpg" alt=""></figure>
     <figure class="gallery-grid-item"><img data-src="media/post4-4.jpg" alt=""></figure>
@@ -102,7 +110,7 @@
 </section>
 <section class="page-section gallery-section dark" data-section-id="b3">
   <div class="content-wrapper"><div class="gallery-grid gallery-grid-wrapper">
-    <figure class="gallery-grid-item"><img data-src="media/post2-2.jpg" alt=""><figcaption class="gallery-caption"><p>Second gallery section = second post.</p><p>likes: 2,019</p></figcaption></figure>
+    <figure class="gallery-grid-item"><img data-src="media/post2-2.jpg" alt=""><figcaption class="gallery-caption"><p>Second gallery section = second post.</p></figcaption></figure>
     <figure class="gallery-grid-item"><img data-src="media/post2-3.jpg" alt=""></figure>
   </div></div>
 </section>
@@ -113,11 +121,11 @@
 </section>
 
 <!-- ============ 3. CODE BLOCK MODE: mixed photo + video Fluid Engine sections ============ -->
-<section class="page-section" data-section-id="c1">
+<section class="page-section" id="ig-carousel-3" data-section-id="c1">
   <div class="content-wrapper"><div class="content"><div class="fluid-engine">
-    <div class="fe-block" style="grid-column: 1 / -1"><div class="sqs-block html-block sqs-block-html"><div class="sqs-block-content"><h2>Code block mode · mixed media, row layout</h2></div></div></div>
+    <div class="fe-block" style="grid-column: 1 / -1"><div class="sqs-block html-block sqs-block-html"><div class="sqs-block-content"><h2>Code block mode · mixed media · layout + gap + letter-spacing set in CSS</h2></div></div></div>
     <div class="fe-block" style="grid-column: 1 / -1"><div class="sqs-block code-block sqs-block-code"><div class="sqs-block-content">
-      <div data-ig-carousel data-sections="2" data-layout="row" data-per-view="2" data-like-animation="roll" data-likes-style="line" data-show-counter="true" data-avatar-ring="true" data-verified="true"></div>
+      <div data-ig-carousel data-sections="3" data-per-view="2" data-show-counter="true" data-avatar-ring="true" data-verified="true"></div>
     </div></div></div>
   </div></div></div>
 </section>
@@ -126,14 +134,58 @@
     <div class="fe-block" style="grid-column: 3 / 5; grid-row: 1"><div class="sqs-block image-block sqs-block-image"><div class="sqs-block-content"><img data-src="media/post3-3.jpg" alt=""></div></div></div>
     <div class="fe-block" style="grid-column: 1 / 3; grid-row: 1"><div class="sqs-block image-block sqs-block-image"><div class="sqs-block-content"><img data-src="media/post1-4.jpg" alt=""></div></div></div>
     <div class="fe-block" style="grid-column: 1 / 3; grid-row: 2"><div class="sqs-block code-block sqs-block-code"><div class="sqs-block-content"><video src="media/clip.mp4" poster="media/post3-4.jpg" muted loop playsinline></video></div></div></div>
-    <div class="fe-block" style="grid-column: 1 / -1; grid-row: 3"><div class="sqs-block html-block sqs-block-html"><div class="sqs-block-content"><p>Fluid Engine post: image blocks + a video code block, ordered as they appear on screen (left-to-right, top-to-bottom). This caption is long enough that it will be clipped to two lines with an ellipsis — tap it to expand.</p><p>likes: 940</p><p>location: Portland, Oregon</p><p>date: March 3</p></div></div></div>
+    <div class="fe-block" style="grid-column: 1 / -1; grid-row: 3"><div class="sqs-block html-block sqs-block-html"><div class="sqs-block-content"><p>Fluid Engine post: image blocks + a video code block, ordered as they appear on screen (left-to-right, top-to-bottom). This caption is long enough that it will be clipped to two lines with an ellipsis — tap it to expand.</p><p>location: Portland, Oregon</p><p>date: March 3</p></div></div></div>
   </div></div></div>
 </section>
 <section class="page-section" data-section-id="c3">
   <div class="content-wrapper"><div class="content"><div class="fluid-engine">
     <div class="fe-block"><div class="sqs-block image-block sqs-block-image"><div class="sqs-block-content"><img data-src="media/post4-2.jpg" alt=""></div></div></div>
-    <div class="fe-block"><div class="sqs-block html-block sqs-block-html"><div class="sqs-block-content"><p>Another post with its own account override.</p><p>account: guest.studio</p><p>likes: 51</p></div></div></div>
+    <div class="fe-block"><div class="sqs-block html-block sqs-block-html"><div class="sqs-block-content"><p><strong>guest.studio</strong><br><em>Austin, TX</em></p><p>Another post: bold = account name, italic = location, a link to an image = profile picture.</p><p><a href="media/avatar.png">avatar</a></p></div></div></div>
   </div></div></div>
+</section>
+
+<!-- YouTube video block post (third post of carousel 3) -->
+<section class="page-section" data-section-id="c4">
+  <div class="content-wrapper"><div class="content"><div class="fluid-engine">
+    <div class="fe-block"><div class="sqs-block website-component-block sqs-block-website-component sqs-block-video video-block"><div class="sqs-block-content">
+      <div class="sqs-video-wrapper" data-html="&lt;iframe src=&quot;https://www.youtube.com/embed/aqz-KE-bpKQ?feature=oembed&amp;amp;x=1&quot;&gt;&lt;/iframe&gt;"></div>
+      <div class="video-caption-wrapper"><div class="video-caption"><p><strong>yt.channel</strong></p><p>YouTube post: keeps YouTube's own play controls.</p></div></div>
+    </div></div></div>
+  </div></div></div>
+</section>
+
+<!-- ============ 4. CODE BLOCK + GRID GALLERIES with per-post profiles (first image = avatar, alt = name) ============ -->
+<section class="page-section dark" id="ig-carousel-4" data-section-id="d1">
+  <div class="content-wrapper"><div class="content"><div class="fluid-engine">
+    <div class="fe-block" style="grid-column: 1 / -1"><div class="sqs-block html-block sqs-block-html"><div class="sqs-block-content"><h2>Profiles from first gallery image · captions in the code block</h2></div></div></div>
+    <div class="fe-block" style="grid-column: 1 / -1"><div class="sqs-block code-block sqs-block-code"><div class="sqs-block-content">
+      <div data-ig-carousel data-sections="3" data-avatar="first-image" hidden>
+        <p>Caption for the first gallery post, written in the code block.</p>
+        <p>Second post caption.</p>
+        <p>Third post caption.<br>location: Brooklyn, NY</p>
+      </div>
+    </div></div></div>
+  </div></div></div>
+</section>
+<section class="page-section gallery-section dark" data-section-id="d2">
+  <div class="content-wrapper"><div class="gallery-grid gallery-grid-wrapper">
+    <figure class="gallery-grid-item"><img data-src="media/avatar.png" alt="swtl.design"></figure>
+    <figure class="gallery-grid-item"><img data-src="media/post1-1.jpg" alt="post1-1.jpg"></figure>
+    <figure class="gallery-grid-item"><img data-src="media/post1-2.jpg" alt="post1-2.jpg"></figure>
+  </div></div>
+</section>
+<section class="page-section gallery-section dark" data-section-id="d3">
+  <div class="content-wrapper"><div class="gallery-grid gallery-grid-wrapper">
+    <figure class="gallery-grid-item"><img data-src="media/post4-1.jpg" alt="Physiq"></figure>
+    <figure class="gallery-grid-item"><img data-src="media/post2-1.jpg" alt=""></figure>
+  </div></div>
+</section>
+<section class="page-section gallery-section dark" data-section-id="d4">
+  <div class="content-wrapper"><div class="gallery-grid gallery-grid-wrapper">
+    <figure class="gallery-grid-item"><img data-src="media/post3-1.jpg" alt="IMG_4521.jpg"></figure>
+    <figure class="gallery-grid-item"><img data-src="media/post3-2.jpg" alt=""></figure>
+    <figure class="gallery-grid-item"><img data-src="media/post3-3.jpg" alt=""></figure>
+  </div></div>
 </section>
 
 <section class="page-section"><div class="content-wrapper"><h2>(next page section — must stay visible)</h2></div></section>

@@ -1,5 +1,5 @@
 /* ==========================================================================
-   IG Carousel for Squarespace 7.1 — v1.0.0
+   IG Carousel for Squarespace 7.1 — v1.1.0
    Instagram-style post carousel built from native Squarespace content.
    https://github.com/zsawtelle-lgtm/sqsp-social-highlight-scroll
 
@@ -15,29 +15,35 @@
                     has no list in it. The Grid gallery sections directly below
                     it become the posts (one gallery section = one post).
 
-   3. CODE BLOCK    <div data-ig-carousel data-sections="3"></div> in a Code
-                    Block. The next 3 sections become posts. Each can be a
+   3. CODE BLOCK    <div data-ig-carousel data-sections="3" hidden>
+                      <p>Caption for post 1</p> <p>Caption for post 2</p> …
+                    </div>
+                    The next 3 sections become posts. Each can be a Grid
                     gallery section OR a blank (Fluid Engine) section holding
                     image blocks, video blocks and one text block for the
-                    caption — this is the mode for mixed photo + video posts.
+                    caption. data-avatar="first-image" turns each gallery's
+                    first image into that post's profile picture, and its alt
+                    text into the account name.
 
    Options are read (lowest → highest priority) from: defaults,
    window.IGCarouselConfig, IGCarouselConfig.carousels["<anchor id>"],
-   ratio tokens in the anchor id (ig-carousel-2-16x9), data-* attributes on
-   the Code Block div. Per-post "key: value" lines (likes: 1,204) in captions
-   override everything for that post.
+   ratio tokens in the anchor id (ig-carousel-2-16x9), CSS custom properties
+   (--igc-layout, --igc-account …), data-* attributes on the Code Block div.
+   Per-post "key: value" lines (location: Boston) override everything for
+   that post.
    ========================================================================== */
 (function () {
   'use strict';
 
   if (window.IGCarousel && window.IGCarousel.version) return; // loaded twice
 
-  var VERSION = '1.0.0';
+  var VERSION = '1.1.0';
 
   var DEFAULTS = {
     idPrefix: 'ig-carousel',
     account: '',            // account name shown top-left
-    avatar: '',             // image URL for the profile picture
+    avatar: '',             // profile picture URL, or "first-image" (gallery posts:
+                            // first image = avatar, its alt text = account name)
     profile: '',            // URL the account name links to
     verified: false,        // blue check after the account name
     avatarRing: false,      // Instagram story-ring gradient around avatar
@@ -52,22 +58,17 @@
     theme: 'light',         // light | dark | section
     captionLines: 2,        // lines shown before the caption is clipped "…"
     captionExpand: true,    // click caption to read the whole thing
-    likeAnimation: 'roll',  // roll | none   (number flip when liking)
     heartAnimation: 'pop',  // pop | none    (heart icon pop when liking)
-    countUp: true,          // like counts count up when scrolled into view
     doubleTapLike: true,    // double-click / double-tap image to like
     rememberLikes: true,    // keep a visitor's likes/saves in their browser
     showCounter: false,     // "1/3" badge on multi-image posts
-    showLikes: true,
-    likesStyle: 'inline',   // inline = number beside the heart (Framer look)
-                            // line   = "1,204 likes" under the icons (Instagram look)
     showDate: true,
     autoplayVideo: true,    // muted autoplay while the post is on screen
     sections: 'auto',       // section/code-block mode: how many sections to pull
     hideSource: true        // hide the original sections after building
   };
 
-  var META_KEYS = ['likes', 'comments', 'account', 'avatar', 'profile', 'link', 'video', 'location', 'date', 'alt'];
+  var META_KEYS = ['account', 'avatar', 'profile', 'link', 'video', 'location', 'date', 'alt'];
   var STORE_PREFIX = 'igc:';
   var reduceMotion = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
 
@@ -85,6 +86,7 @@
     next: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>',
     burst: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16.792 1.904a6.04 6.04 0 0 0-4.797 2.127 6.052 6.052 0 0 0-4.787-2.127A6.985 6.985 0 0 0 .5 9.122c0 3.61 2.55 5.827 5.015 7.97.283.246.569.494.853.747l1.027.918a44.998 44.998 0 0 0 3.518 3.018 2 2 0 0 0 2.174 0 45.263 45.263 0 0 0 3.626-3.115l.922-.824c.293-.26.59-.519.885-.774 2.334-2.025 4.98-4.32 4.98-7.94a6.985 6.985 0 0 0-6.708-7.218Z"/></svg>',
     verified: '<svg class="igc-verified" viewBox="0 0 40 40" role="img" aria-label="Verified"><path fill="#0095f6" d="M19.998 3.094 14.638 0l-2.972 5.15H5.432v6.354L0 14.64 3.094 20 0 25.359l5.432 3.137v5.905h5.975L14.638 40l5.36-3.094L25.358 40l3.232-5.6h6.162v-6.01L40 25.359 36.905 20 40 14.641l-5.248-3.03v-6.46h-6.419L25.358 0l-5.36 3.094Z"/><path fill="#fff" d="m17.42 26.53-6.06-6.06 2.12-2.12 3.94 3.94 8.68-8.68 2.12 2.12z"/></svg>',
+    play: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5.5v13a1 1 0 0 0 1.52.85l10.4-6.5a1 1 0 0 0 0-1.7L9.52 4.65A1 1 0 0 0 8 5.5z"/></svg>',
     soundOff: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 9v6h4l5 4V5L7 9H3z"/><path d="m16 9 5 6m0-6-5 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
     soundOn: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 9v6h4l5 4V5L7 9H3z"/><path d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>'
   };
@@ -180,36 +182,51 @@
     return '';
   }
 
-  /* "likes: 1,204" lines become meta; everything else is the caption. */
+  /* textContent, but <br> becomes a line break (works inside hidden elements too). */
+  function textWithBreaks(n) {
+    var c = n.cloneNode(true);
+    $$('br', c).forEach(function (br) { br.parentNode.replaceChild(document.createTextNode('\n'), br); });
+    return c.textContent;
+  }
+
+  function isImageUrl(url) {
+    return /\.(jpe?g|png|gif|webp|avif)(\?|#|$)/i.test(url) || /images\.squarespace-cdn\.com|\/thumbnail(\?|$)/.test(url);
+  }
+
+  /* Formatted post text (text blocks, video descriptions, code-block lines):
+       bold          → account name
+       link → image  → profile picture
+       other link    → where the comment icon links
+     The rest is the caption ("key: value" lines still work). */
+  function parseRich(node) {
+    if (!node) return parseText(null);
+    var c = node.cloneNode(true);
+    var meta = {};
+    var bold = $('strong, b', c);
+    if (bold) { meta.account = bold.textContent.trim(); bold.remove(); }
+    $$('a[href]', c).forEach(function (a) {
+      var href = a.getAttribute('href');
+      if (isImageUrl(href)) { if (!meta.avatar) meta.avatar = href; } else if (!meta.link) meta.link = href;
+      a.remove();
+    });
+    var t = parseText(c);
+    Object.keys(meta).forEach(function (k) { if (meta[k] && !t.meta[k]) t.meta[k] = meta[k]; });
+    return t;
+  }
+
+  /* "location: Boston" lines become meta; everything else is the caption. */
   function parseText(node) {
     var meta = {};
     var lines = [];
     if (!node) return { caption: '', meta: meta };
     var blocks = $$('p, h1, h2, h3, h4, li, blockquote', node);
-    var parts = blocks.length ? blocks.map(function (b) { return b.innerText || b.textContent; }) : [(node.innerText || node.textContent)];
+    var parts = (blocks.length ? blocks : [node]).map(textWithBreaks);
     parts.join('\n').split(/\n+/).forEach(function (line) {
       var m = /^\s*([a-z]+)\s*:\s*(.+?)\s*$/i.exec(line);
       if (m && META_KEYS.indexOf(m[1].toLowerCase()) > -1) meta[m[1].toLowerCase()] = m[2];
       else if (line.trim()) lines.push(line.trim());
     });
     return { caption: lines.join('\n'), meta: meta };
-  }
-
-  function parseCount(v) {
-    if (v == null || v === '') return null;
-    var s = String(v).trim().toLowerCase().replace(/,/g, '');
-    var m = /^([\d.]+)\s*([km])?/.exec(s);
-    if (!m) return null;
-    var n = parseFloat(m[1]);
-    if (m[2] === 'k') n *= 1e3;
-    if (m[2] === 'm') n *= 1e6;
-    return { n: Math.round(n), compact: !!m[2] };
-  }
-  function formatCount(n, compact) {
-    if (compact && n >= 10000) {
-      try { return new Intl.NumberFormat('en', { notation: 'compact', maximumFractionDigits: 1 }).format(n).toLowerCase(); } catch (e) {}
-    }
-    try { return n.toLocaleString('en-US'); } catch (e2) { return String(n); }
   }
 
   function ratioOf(aspect) {
@@ -228,6 +245,20 @@
       if (Math.abs(k / (sr[0] / sr[1]) - 1) < 0.03) return sr[0] + ' / ' + sr[1];
     }
     return Math.round(r.width) + ' / ' + Math.round(r.height);
+  }
+
+  /* Read a --igc-* setting from Custom CSS (strips quotes and url()). */
+  function cssSetting(node, name) {
+    var v = getComputedStyle(node).getPropertyValue(name).trim();
+    if (!v) return '';
+    var u = /^url\((['"]?)(.*)\1\)$/.exec(v);
+    if (u) return u[2];
+    return v.replace(/^(['"])(.*)\1$/, '$2');
+  }
+
+  /* Squarespace leaves the file name as alt text when none was typed. */
+  function looksLikeFileName(s) {
+    return !s || /\.(png|jpe?g|gif|webp|avif|heic|svg)$/i.test(s) || /^(img|dsc|image)[-_ ]?\d+/i.test(s);
   }
 
   function isEditMode() {
@@ -255,7 +286,31 @@
     if (block.classList.contains('sqs-block-gallery')) {
       return galleryItems(block);
     }
+    var native = block.classList.contains('sqs-block-video') && $('.sqs-native-video[data-config-video]', block);
+    if (native) {
+      var cfg = {};
+      try { cfg = JSON.parse(native.getAttribute('data-config-video')); } catch (e) { cfg = {}; }
+      if (cfg.alexandriaUrl) {
+        return [{
+          type: 'hls',
+          url: cfg.alexandriaUrl.replace('{variant}', 'playlist.m3u8'),
+          poster: cfg.alexandriaUrl.replace('{variant}', 'thumbnail'),
+          text: $('.video-caption', block)
+        }];
+      }
+    }
     if (block.classList.contains('sqs-block-video') || block.classList.contains('sqs-block-embed')) {
+      var html = block.innerHTML.replace(/&amp;/g, '&');
+      var yt = /(?:youtube(?:-nocookie)?\.com\/(?:embed\/|watch\?v=|shorts\/|v\/)|youtu\.be\/)([\w-]{11})/.exec(html);
+      var vm = !yt && /(?:player\.)?vimeo\.com\/(?:video\/)?(\d{6,})/.exec(html);
+      if (yt || vm) {
+        return [{
+          type: 'player',
+          url: yt ? 'https://www.youtube.com/embed/' + yt[1] + '?playsinline=1&rel=0&modestbranding=1'
+                  : 'https://player.vimeo.com/video/' + vm[1] + '?playsinline=1&title=0&byline=0&portrait=0',
+          text: $('.video-caption', block)
+        }];
+      }
       return [{ type: 'block', node: $('.sqs-block-content', block) || block, video: true }];
     }
     if (block.classList.contains('sqs-block-code')) {
@@ -296,10 +351,17 @@
     return false;
   }
 
-  function postFromSection(section) {
+  function postFromSection(section, o) {
     var post = { slides: [], caption: '', meta: {} };
     if (isGallerySection(section)) {
-      galleryItems(section).forEach(function (it, i) {
+      var items = galleryItems(section);
+      if (o.avatar === 'first-image' && items.length > 1) {
+        var face = items.shift();
+        post.meta.avatar = face.url;
+        if (!looksLikeFileName(face.alt)) post.meta.account = face.alt;
+        post.profileImage = true;
+      }
+      items.forEach(function (it, i) {
         if (i === 0 && it.caption) {
           var t = parseText(it.caption);
           post.caption = t.caption;
@@ -320,10 +382,13 @@
     blocks.forEach(function (o) {
       var b = o.b;
       if (b.classList.contains('sqs-block-html') || b.classList.contains('sqs-block-markdown')) {
-        texts.push(parseText($('.sqs-block-content', b) || b));
+        texts.push(parseRich($('.sqs-block-content', b) || b));
         return;
       }
-      mediaFromBlock(b).forEach(function (m) { post.slides.push(m); });
+      mediaFromBlock(b).forEach(function (m) {
+        if (m.text) texts.push(parseRich(m.text));   // video block description
+        post.slides.push(m);
+      });
     });
     texts.forEach(function (t) {
       if (t.caption) post.caption += (post.caption ? '\n' : '') + t.caption;
@@ -381,14 +446,12 @@
   }
 
   /* --------------------------------------------------------- Rendering */
-  function Carousel(opts, posts, mount, key) {
+  function Carousel(opts, posts, root, key) {
     this.o = opts;
     this.posts = posts;
     this.key = key;
-    this.countTargets = [];
     this.active = 0;
-    this.root = el('div', 'igc');
-    mount(this.root);
+    this.root = root;   // already in the page, so CSS settings could be read
     this.build();
   }
 
@@ -402,7 +465,8 @@
     root.setAttribute('data-theme', o.theme);
     root.setAttribute('data-heart-animation', reduceMotion ? 'none' : o.heartAnimation);
     root.setAttribute('data-caption-expand', String(!!o.captionExpand));
-    root.style.setProperty('--igc-ratio', o._ratio || '4 / 5');
+    root.style.setProperty('--igc-ratio-js', o._ratio || '4 / 5');
+    if (o._gap) root.style.setProperty('--igc-gap-native', o._gap);
     root.style.setProperty('--igc-caption-lines', o.captionLines);
     if (o.cardWidth) root.style.setProperty('--igc-card-width', /^\d+$/.test(String(o.cardWidth)) ? o.cardWidth + 'px' : o.cardWidth);
     root.style.setProperty('--igc-per-view', o.perView);
@@ -505,7 +569,7 @@
     var m = p.meta || {};
     var total = this.posts.length;
     var account = m.account || o.account || '';
-    var avatar = m.avatar || o.avatar || '';
+    var avatar = m.avatar || (o.avatar === 'first-image' ? '' : o.avatar) || '';
     var profile = m.profile || o.profile || '';
     var loc = m.location || o.location || '';
     var postKey = this.key + ':' + hash((p.slides[0] && p.slides[0].url) || p.caption || String(index));
@@ -554,6 +618,27 @@
         if (s.poster) v.poster = sized(s.poster, 1000);
         slide.appendChild(v);
         hasVideo = true;
+      } else if (s.type === 'hls') {
+        var hv = el('video');
+        hv.muted = true;
+        hv.loop = true;
+        hv.playsInline = true;
+        hv.setAttribute('playsinline', '');
+        hv.setAttribute('muted', '');
+        hv.preload = 'none';
+        hv.poster = s.poster;
+        hv.setAttribute('data-hls', s.url);   // stream attached on first play
+        slide.appendChild(hv);
+        hasVideo = true;
+      } else if (s.type === 'player') {   // YouTube / Vimeo with their own play controls
+        var pf = el('iframe');
+        pf.src = s.url;
+        pf.allow = 'autoplay; fullscreen; picture-in-picture; encrypted-media';
+        pf.allowFullscreen = true;
+        pf.loading = 'lazy';
+        pf.title = 'Video';
+        slide.classList.add('igc-slide--player');
+        slide.appendChild(pf);
       } else if (s.type === 'embed') {
         var src = embedUrl(s.url);
         if (src) {
@@ -614,6 +699,16 @@
       });
       media.appendChild(mute);
     }
+    if (hasVideo) {
+      media.setAttribute('data-playing', 'false');
+      var playIcon = el('div', 'igc-play', ICON.play);
+      playIcon.setAttribute('aria-hidden', 'true');
+      media.appendChild(playIcon);
+      $$('video', track).forEach(function (v) {
+        v.addEventListener('play', function () { media.setAttribute('data-playing', 'true'); });
+        v.addEventListener('pause', function () { media.setAttribute('data-playing', 'false'); });
+      });
+    }
     var burst = el('div', 'igc-burst', ICON.burst);
     media.appendChild(burst);
     art.appendChild(media);
@@ -624,18 +719,9 @@
     like.type = 'button';
     like.setAttribute('aria-label', 'Like');
     like.setAttribute('aria-pressed', 'false');
-    var count = o.showLikes ? parseCount(m.likes) : null;
-    var countEl = null;
-    if (count) {
-      countEl = el('span', 'igc-count');
-      countEl.setAttribute('data-target', count.n);
-      countEl.innerHTML = '<span>' + formatCount(o.countUp && !reduceMotion ? 0 : count.n, count.compact) + '</span>';
-      if (o.countUp && !reduceMotion) this.countTargets.push({ el: countEl, compact: count.compact });
-    }
     var comment = el(m.link ? 'a' : 'button', 'igc-action igc-comment', ICON.comment);
     if (m.link) { comment.href = m.link; comment.target = '_blank'; comment.rel = 'noopener'; } else comment.type = 'button';
     comment.setAttribute('aria-label', 'Comment');
-    if (m.comments) comment.insertAdjacentHTML('beforeend', '<span>' + esc(m.comments) + '</span>');
     var repost = el('button', 'igc-action igc-repost', ICON.repost);
     repost.type = 'button';
     repost.setAttribute('aria-label', 'Repost');
@@ -650,18 +736,8 @@
     [like, comment, repost, share, save].forEach(function (b) { actions.appendChild(b); });
     art.appendChild(actions);
 
-    /* ---- text: likes line (optional) + clipped caption ---- */
+    /* ---- text: clipped caption ---- */
     var body = el('div', 'igc-body');
-    if (countEl) {
-      if (o.likesStyle === 'line') {
-        var likesRow = el('div', 'igc-likes');
-        likesRow.appendChild(countEl);
-        likesRow.appendChild(document.createTextNode(count.n === 1 ? ' like' : ' likes'));
-        body.appendChild(likesRow);
-      } else {
-        like.appendChild(countEl);
-      }
-    }
     if (p.caption) {
       var cap = el('p', 'igc-caption');
       cap.innerHTML = (account ? '<b>' + esc(account) + '</b>' : '') + esc(p.caption).replace(/\n/g, ' ');
@@ -709,26 +785,41 @@
         void like.offsetWidth;
         like.classList.add('is-pop');
       }
-      if (countEl) {
-        var target = +countEl.getAttribute('data-target') + (on ? 1 : -1);
-        countEl.setAttribute('data-target', target);
-        if (animate) self.setCount(countEl, target, count.compact, on ? 'up' : 'down');
-      }
     }
     if (o.rememberLikes && store(postKey + ':like') === '1') setLiked(true, false);
     like.addEventListener('click', function () { setLiked(!liked, true); });
+
+    /* single tap on a video = play / pause (waits briefly so a double-tap can still like) */
+    var tapTimer = 0;
+    media.addEventListener('click', function (e) {
+      if (e.target.closest('button, a')) return;
+      var v = $$('.igc-slide', track)[current];
+      v = v && $('video', v);
+      if (!v) return;
+      clearTimeout(tapTimer);
+      tapTimer = setTimeout(function () {
+        if (v.paused) {
+          v._igcUserPaused = false;
+          attachStream(v).then(function () { var pr = v.play(); if (pr && pr.catch) pr.catch(function () {}); });
+        } else {
+          v._igcUserPaused = true;
+          v.pause();
+        }
+      }, o.doubleTapLike ? 260 : 0);
+    });
 
     if (o.doubleTapLike) {
       var lastTap = 0;
       media.addEventListener('dblclick', function (e) {
         if (e.target.closest('button')) return;
         e.preventDefault();
+        clearTimeout(tapTimer);
         heartBurst();
       });
       media.addEventListener('touchend', function (e) {
         if (e.target.closest('button, a')) return;
         var now = Date.now();
-        if (now - lastTap < 300) { e.preventDefault(); heartBurst(); lastTap = 0; } else lastTap = now;
+        if (now - lastTap < 300) { e.preventDefault(); clearTimeout(tapTimer); heartBurst(); lastTap = 0; } else lastTap = now;
       });
     }
     function heartBurst() {
@@ -766,35 +857,12 @@
     return art;
   };
 
-  Carousel.prototype.setCount = function (countEl, n, compact, dir) {
-    var txt = formatCount(n, compact);
-    var oldSpan = countEl.lastElementChild;
-    if (!dir || this.o.likeAnimation !== 'roll' || reduceMotion) {
-      countEl.innerHTML = '<span>' + txt + '</span>';
-      return;
-    }
-    $$('span', countEl).forEach(function (s) { if (s !== oldSpan) s.remove(); });
-    var neu = el('span', 'is-in-' + dir, txt);
-    oldSpan.className = 'is-out-' + dir;
-    countEl.appendChild(neu);
-    setTimeout(function () { if (oldSpan.parentNode) oldSpan.remove(); neu.className = ''; }, 380);
-  };
-
   Carousel.prototype.observe = function () {
     var self = this;
     if (!('IntersectionObserver' in window)) {
-      this.countTargets.forEach(function (t) { t.el.innerHTML = '<span>' + formatCount(+t.el.getAttribute('data-target'), t.compact) + '</span>'; });
       $$('.igc-media-track', this.root).forEach(function (t) { self.playVisible(t); });
       return;
     }
-    // every like count in the carousel counts up together when it scrolls into view
-    var countIo = new IntersectionObserver(function (entries) {
-      if (!entries[0].isIntersecting) return;
-      countIo.disconnect();
-      self.countTargets.forEach(function (t) { self.countUp(t); });
-    }, { threshold: 0.25 });
-    countIo.observe(this.root);
-
     var io = new IntersectionObserver(function (entries) {
       entries.forEach(function (e) {
         var track = $('.igc-media-track', e.target);
@@ -803,19 +871,6 @@
       });
     }, { threshold: 0.35 });
     $$('.igc-post', this.root).forEach(function (p) { io.observe(p); });
-  };
-
-  Carousel.prototype.countUp = function (t) {
-    var start = null, dur = 1400;
-    function frame(ts) {
-      if (!start) start = ts;
-      var k = Math.min(1, (ts - start) / dur);
-      var eased = 1 - Math.pow(1 - k, 3);
-      var target = +t.el.getAttribute('data-target');
-      t.el.innerHTML = '<span>' + formatCount(Math.round(target * eased), t.compact) + '</span>';
-      if (k < 1) requestAnimationFrame(frame);
-    }
-    requestAnimationFrame(frame);
   };
 
   Carousel.prototype.playVisible = function (track) {
@@ -830,11 +885,55 @@
     }
     $$('.igc-slide', track).forEach(function (s, k) {
       $$('video', s).forEach(function (v) {
-        if (k === i && onScreen) { var pr = v.play(); if (pr && pr.catch) pr.catch(function () {}); }
+        if (k === i && onScreen) {
+          if (v._igcUserPaused) return;
+          attachStream(v).then(function () { var pr = v.play(); if (pr && pr.catch) pr.catch(function () {}); });
+        }
         else v.pause();
       });
     });
   };
+
+  /* Squarespace-hosted videos are encrypted HLS streams, played with hls.js
+     (loaded from jsDelivr only when a page has one). */
+  var HLS_SRC = 'https://cdn.jsdelivr.net/npm/hls.js@1/dist/hls.min.js';
+  var hlsLoading = null;
+  function loadHls() {
+    if (window.Hls) return Promise.resolve(window.Hls);
+    if (!hlsLoading) {
+      hlsLoading = new Promise(function (resolve, reject) {
+        var sc = document.createElement('script');
+        sc.src = HLS_SRC;
+        sc.async = true;
+        sc.onload = function () { resolve(window.Hls); };
+        sc.onerror = reject;
+        document.head.appendChild(sc);
+      });
+    }
+    return hlsLoading;
+  }
+  function attachStream(v) {
+    var url = v.getAttribute('data-hls');
+    if (!url) return Promise.resolve();
+    if (v._igcStream) return v._igcStream;
+    // Prefer hls.js: Chrome now *claims* native HLS support but fails on
+    // Squarespace's encrypted streams. Native is the fallback for browsers
+    // without MediaSource (older iPhones).
+    var native = function () { if (v.canPlayType('application/vnd.apple.mpegurl')) v.src = url; };
+    if (window.MediaSource || window.ManagedMediaSource) {
+      v._igcStream = loadHls().then(function (Hls) {
+        if (!Hls || !Hls.isSupported()) { native(); return; }
+        var hls = new Hls({ capLevelToPlayerSize: true });
+        hls.loadSource(url);
+        hls.attachMedia(v);
+        v._igcHls = hls;
+      }).catch(native);
+    } else {
+      native();
+      v._igcStream = Promise.resolve();
+    }
+    return v._igcStream;
+  }
 
   /* --------------------------------------------------------- Bootstrap */
   var instances = [];
@@ -847,7 +946,8 @@
     if (anchorId && g.carousels && g.carousels[anchorId]) extend(o, g.carousels[anchorId]);
     var tok = anchorId && /-(\d+(?:\.\d+)?x\d+(?:\.\d+)?)$/.exec(anchorId);
     if (tok) o.aspect = tok[1].replace('x', ':');
-    extend(o, dataOptions(codeNode));
+    o._data = dataOptions(codeNode);
+    extend(o, o._data);
     o._anchor = anchorId || '';
     return o;
   }
@@ -883,12 +983,48 @@
     return targets;
   }
 
+  /* "Space between items" from the list / gallery design panel. */
+  /* Custom CSS can set layout / theme / account / avatar per carousel, e.g.
+     #ig-carousel-2 { --igc-layout: row; --igc-account: "swtl.design"; }
+     Code-block data-* attributes still win over CSS. */
+  function applyCssSettings(o, root) {
+    var data = o._data || {};
+    [['layout', '--igc-layout'], ['theme', '--igc-theme'], ['account', '--igc-account'], ['avatar', '--igc-avatar'], ['profile', '--igc-profile']].forEach(function (pair) {
+      if (data[pair[0]] !== undefined) return;
+      var v = cssSetting(root, pair[1]);
+      if (v) o[pair[0]] = v;
+    });
+  }
+
+  function nativeGap(node) {
+    if (!node) return '';
+    var g = parseFloat(getComputedStyle(node).columnGap);
+    return g > 0 ? g + 'px' : '';
+  }
+
+  /* Grid galleries publish their spacing slider as data-gutter before their own
+     script applies it (gutter 48 renders as 2.4vw, i.e. gutter / 20 vw). */
+  function galleryGutter(grid) {
+    var g = grid && parseFloat(grid.getAttribute('data-gutter'));
+    return g > 0 ? (g / 20) + 'vw' : '';
+  }
+
   function buildTarget(t) {
     var section = t.section;
     var anchorId = anchorIdOf(section);
     var o = optionsFor(anchorId, t.code);
     var list = !t.code && $('.user-items-list', section);
-    var posts, mount, measureNode, hidden = [];
+    var root = el('div', 'igc');
+    var posts, measureNode, hidden = [];
+    if (list) {
+      list.parentNode.insertBefore(root, list.nextSibling);
+    } else if (t.code) {
+      t.code.parentNode.insertBefore(root, t.code.nextSibling);
+    } else {
+      root.style.marginTop = 'var(--igc-section-spacing, 2rem)';
+      ($('.content-wrapper > .content', section) || $('.content-wrapper', section) || section).appendChild(root);
+    }
+    applyCssSettings(o, root);
 
     if (list) {
       measureNode = $('.user-items-list-carousel__media-container, .list-image, .user-items-list-simple__media, .list-item img', list);
@@ -896,30 +1032,34 @@
         var nativeRatio = $('[data-media-aspect-ratio]', list);   // the list section's Image ratio setting
         o._ratio = (nativeRatio && ratioOf(nativeRatio.getAttribute('data-media-aspect-ratio'))) || measureRatio(measureNode);
       }
+      o._gap = nativeGap($('.user-items-list-carousel__slides, .user-items-list-simple, .user-items-list-banner-slideshow__slides', list));
       posts = postsFromList(list);
-      mount = function (node) { list.parentNode.insertBefore(node, list.nextSibling); };
       hidden.push(list);
     } else {
       var count = o.sections === 'auto' ? 'auto' : Math.max(1, parseInt(o.sections, 10) || 1);
       var sources = nextSections(section, count);
-      if (!sources.length) return;
-      if (o.aspect === 'native') o._ratio = measureRatio($('.gallery-grid-item, .sqs-block-image .image-block-wrapper', sources[0]));
-      posts = sources.map(postFromSection).filter(function (p) { return p.slides.length; });
-      if (t.code) {
-        mount = function (node) { t.code.parentNode.insertBefore(node, t.code.nextSibling); };
-      } else {
-        var content = $('.content-wrapper > .content', section) || $('.content-wrapper', section) || section;
-        mount = function (node) {
-          node.style.marginTop = 'var(--igc-section-spacing, 2rem)';
-          content.appendChild(node);
-        };
+      if (!sources.length) { root.remove(); return; }
+      if (o.aspect === 'native') {   // measure a real photo, not the profile image
+        var tiles = $$('.gallery-grid-item, .sqs-block-image .image-block-wrapper', sources[0]);
+        o._ratio = measureRatio(tiles[o.avatar === 'first-image' && tiles.length > 1 ? 1 : 0]);
       }
+      o._gap = nativeGap($('.gallery-grid-wrapper', sources[0])) || galleryGutter($('.gallery-grid[data-gutter]', sources[0]));
+      var captions = t.code ? $$('p, li', t.code).map(function (n) { return parseRich(n); }) : [];
+      posts = sources.map(function (src, i) {
+        var post = postFromSection(src, o);
+        var c = captions[i];
+        if (c) {
+          if (c.caption) post.caption = c.caption;
+          extend(post.meta, c.meta);
+        }
+        return post;
+      }).filter(function (p) { return p.slides.length; });
       if (o.hideSource) hidden = hidden.concat(sources);
     }
-    if (!posts.length) return;
+    if (!posts.length) { root.remove(); return; }
     if (!o._ratio) o._ratio = ratioOf(o.aspect) || '4 / 5';
 
-    var carousel = new Carousel(o, posts, mount, anchorId || ('igc-' + instances.length));
+    var carousel = new Carousel(o, posts, root, anchorId || ('igc-' + instances.length));
     hidden.forEach(function (h) { h.classList.add('igc-source-hidden'); });
     instances.push({ carousel: carousel, hidden: hidden, section: section });
     carousel.root.dispatchEvent(new CustomEvent('igc:ready', { bubbles: true, detail: { id: anchorId, posts: posts.length, options: o } }));
@@ -936,6 +1076,7 @@
   function destroy() {
     instances.forEach(function (inst) {
       inst.hidden.forEach(function (h) { h.classList.remove('igc-source-hidden'); });
+      $$('video', inst.carousel.root).forEach(function (v) { if (v._igcHls) v._igcHls.destroy(); });
       if (inst.carousel.root.parentNode) inst.carousel.root.parentNode.removeChild(inst.carousel.root);
     });
     moved.forEach(function (pair) {
