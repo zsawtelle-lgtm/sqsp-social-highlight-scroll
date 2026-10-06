@@ -1,7 +1,7 @@
 # IG Carousel
 
 Instagram-style post carousels built from native Squarespace content.
-Repo: <https://github.com/zsawtelle-lgtm/sqsp-social-highlight-scroll> · Version **1.1.0** · Status: **beta: installed on swtldesignco.com staging**
+Repo: <https://github.com/zsawtelle-lgtm/sqsp-social-highlight-scroll> · Version **1.2.0** · Status: **beta: installed on swtldesignco.com staging**
 
 ---
 
@@ -140,7 +140,10 @@ Uses the Will Myers Slider Pro pattern: a code block pulls in the sections below
    Its **description** is the post text (formatting rules below), unless the code
    block has a `<p>` line for that post. Keep one `<p>` per post, video posts included.
    - **Uploaded video** (recommended): plays muted and looping while the post is
-     centred, with the video's thumbnail as the poster. **Tap** pauses/plays (a play
+     centred, starting from the video's own first frame.
+     **Profile picture:** set it as the Video block's **custom thumbnail** (Video block →
+     Thumbnail → upload). The thumbnail is used only as the round profile picture, never
+     as the video cover, and its focal point is respected. Use a square image. **Tap** pauses/plays (a play
      icon shows while paused), **double-tap** likes, and the speaker button unmutes. The
      video block's own autoplay/controls settings are ignored.
    - **YouTube / Vimeo:** shown with that player's own controls (tap its play button).
@@ -152,19 +155,15 @@ Uses the Will Myers Slider Pro pattern: a code block pulls in the sections below
 | Write it as | Becomes |
 |---|---|
 | **Bold** text | Account name for this post |
-| A link to an image (Squarespace image or video-thumbnail URL, or `.jpg/.png/.webp`) | Profile picture for this post. The link text is not shown |
-| Any other link | Where the comment icon links. The link text is not shown |
+| A link | Where the comment icon links. The link text is not shown |
 | Everything else | Caption |
 
 Only the first bold text is used. For a line under the account name, add a
 `location: Boston, MA` line.
 
-**Profile picture link, step by step:** in the description, type any word (e.g. "avatar"),
-select it → **Link** → paste the image URL. Two easy sources for the URL:
-- **An image already on the site:** open the live page, right-click the image →
-  *Copy image address* (`https://images.squarespace-cdn.com/…`).
-- **Upload it as a file:** select the word → Link → **File** → upload the image.
-  This gives a `/s/name.png` link, which also works.
+**Profile picture for a video post:** the Video block's custom thumbnail (see above).
+For a text-block post, add an `avatar: https://…` line with an image URL (right-click an
+image on the live site → *Copy image address*).
 
 ### Post details
 
@@ -176,7 +175,7 @@ descriptions don't use the bold / image-link rules above.
 |---|---|
 | `location:` | Line under the account name |
 | `link:` | Where the comment icon links |
-| `account:` · `avatar:` · `profile:` | Override the account for this post |
+| `account:` · `avatar:` · `profile:` | Override the account / profile picture URL / name link for this post |
 | `date:` | Grey line under the caption |
 | `video:` | Method A: MP4 / YouTube / Vimeo URL |
 | `alt:` | Image alt text |
@@ -337,7 +336,7 @@ without `data-`), plus:
 | `IGCarousel.init()` | function | Build any carousels not yet built |
 | `IGCarousel.destroy()` | function | Remove all carousels and restore the original sections |
 | `IGCarousel.refresh()` | function | `destroy()` then `init()` |
-| `IGCarousel.version` | string | `1.1.0` |
+| `IGCarousel.version` | string | `1.2.0` |
 
 The plugin watches `body.class` for `sqs-edit-mode-active` and tears down or rebuilds automatically.
 
@@ -367,7 +366,7 @@ The plugin watches `body.class` for `sqs-edit-mode-active` and tears down or reb
 
 | Site | Methods | Notes |
 |---|---|---|
-| swtldesignco.com/carousel-test-1 (staging) | A, C | v1.0 installed. Video-block post (v1.1): bold + image-link description → name + avatar; uploaded video plays in Chrome 154 (hls.js). Earlier: v1.1 tested by injecting it into the live page: list → 4 posts (20px native gap); code block + 3 Grid galleries with `first-image` → 3 posts with their own profile (SWTL Design Co, Physiq, fallback), captions from the code block, 30.72px native gap. No errors. |
+| swtldesignco.com/carousel-test-1 (staging) | A, C | v1.1.0 live via `@1`. v1.2: video post profile picture from the custom thumbnail, plays in Chrome 154 (4/4 runs). Before: Video-block post (v1.1): bold + image-link description → name + avatar; uploaded video plays in Chrome 154 (hls.js). Earlier: v1.1 tested by injecting it into the live page: list → 4 posts (20px native gap); code block + 3 Grid galleries with `first-image` → 3 posts with their own profile (SWTL Design Co, Physiq, fallback), captions from the code block, 30.72px native gap. No errors. |
 
 ## Open items
 
@@ -393,4 +392,7 @@ The plugin watches `body.class` for `sqs-edit-mode-active` and tears down or reb
   the provider's own player. Tested on mock markup only; the live website-component
   YouTube markup hasn't been seen yet.
 - `aspect: 'native'` on gallery posts measures the first photo tile (skips the profile image).
-- **Release:** v1.1.0 needs a `v1.1.0` release tag on `main` for `@1` to pick it up.
+- Video block custom thumbnail is read from `.sqs-native-video[data-config-thumbnail]` →
+  `assetUrl` + `mediaFocalPoint` (verified on staging).
+- **Release:** each version needs its `vX.Y.Z` release tag on `main` for `@1` to pick it up,
+  then purge `https://purge.jsdelivr.net/gh/zsawtelle-lgtm/sqsp-social-highlight-scroll@1/src/ig-carousel.js` (and `.css`).
