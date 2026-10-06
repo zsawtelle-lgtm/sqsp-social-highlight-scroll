@@ -16,8 +16,8 @@ Squarespace content. No third-party embed and no Instagram API.
 
 ## Quick start
 
-1. Paste [`snippets/code-injection-header.html`](snippets/code-injection-header.html) into
-   **Settings → Developer Tools → Code Injection → Header** and set your account name and avatar.
+1. Paste [`snippets/code-injection-footer.html`](snippets/code-injection-footer.html) into
+   **Settings → Advanced → Code Injection → Footer** and set your account name and avatar.
 2. Add an **Auto Layout → Carousel** list section and give it the anchor link `ig-carousel-1`.
 3. Each list item is a post. Put the caption and a `likes: 1,204` line in the Description.
 
@@ -37,11 +37,11 @@ See the full guide: **[docs/INSTALL.md](docs/INSTALL.md)**.
 ## CDN
 
 ```html
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/zsawtelle-lgtm/sqsp-social-highlight-scroll@main/src/ig-carousel.css">
-<script defer src="https://cdn.jsdelivr.net/gh/zsawtelle-lgtm/sqsp-social-highlight-scroll@main/src/ig-carousel.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/zsawtelle-lgtm/sqsp-social-highlight-scroll@1/src/ig-carousel.css">
+<script defer src="https://cdn.jsdelivr.net/gh/zsawtelle-lgtm/sqsp-social-highlight-scroll@1/src/ig-carousel.js"></script>
 ```
 
-Replace `@main` with a release tag (e.g. `@v1.0.0`) to pin a version on client sites.
+`@1` follows the latest 1.x release (requires a `v1.x.x` tag on the repo). Never use `@latest`.
 
 ## Local demo
 

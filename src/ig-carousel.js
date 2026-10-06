@@ -911,6 +911,7 @@
     var carousel = new Carousel(o, posts, mount, anchorId || ('igc-' + instances.length));
     hidden.forEach(function (h) { h.classList.add('igc-source-hidden'); });
     instances.push({ carousel: carousel, hidden: hidden, section: section });
+    carousel.root.dispatchEvent(new CustomEvent('igc:ready', { bubbles: true, detail: { id: anchorId, posts: posts.length, options: o } }));
   }
 
   function init() {

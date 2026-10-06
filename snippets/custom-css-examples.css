@@ -1,25 +1,33 @@
 /* ===================================================================
-   IG Carousel — optional styling. Paste into Design → Custom CSS.
-   Target ONE carousel with its section id, or all with .igc
+   Paste as its own numbered section in Design → Custom CSS.
+   Renumber "XX" to fit the site's table of contents, e.g.
+     XX. IG Carousel ................ instagram-style post carousels
+   Fonts and weights stay in Site Styles — do not set them here.
+   No calc() math with var() here: Squarespace's LESS compiler rejects it.
    =================================================================== */
 
-/* All carousels: use the site's body font instead of the system font */
-.igc { --igc-font: var(--body-font-font-family, inherit); }
+/* ===== XX. IG CAROUSEL ===== */
 
-/* One carousel: wider card, brand-pink heart, rounder corners */
+/* XX.1 All carousels — blue active dot like the Instagram app */
+.igc {
+  --igc-dot: rgba(0, 0, 0, 0.25);
+  --igc-dot-active: #0095f6;
+}
+
+/* XX.2 One carousel — wider card, brand heart colour, rounder corners */
 #ig-carousel-2 .igc {
   --igc-card-width: 420px;
   --igc-heart: #e1306c;
   --igc-card-radius: 28px;
 }
 
-/* Show 3 caption lines instead of 2 */
+/* XX.3 One carousel — show 3 caption lines instead of 2 */
 #ig-carousel-3 .igc { --igc-caption-lines: 3; }
 
-/* Side posts less faded / bigger in focus layout */
-.igc { --igc-peek-opacity: 0.7; --igc-peek-scale: 0.92; }
+/* XX.4 Focus layout — side posts less faded and bigger */
+.igc {
+  --igc-peek-opacity: 0.7;
+  --igc-peek-scale: 0.92;
+}
 
-/* Blue active dot like the Instagram app */
-.igc { --igc-dot: rgba(0, 0, 0, 0.25); --igc-dot-active: #0095f6; }
-
-/* Every variable you can change is listed at the top of src/ig-carousel.css */
+/* Every variable is listed at the top of src/ig-carousel.css */

@@ -27,7 +27,7 @@
   --igc-media-bg: #efefef;
   --igc-text: #0c1014;
   --igc-muted: #737373;
-  --igc-font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --igc-font: inherit;          /* follows Site Styles; set a font here only if you must */
   --igc-font-size: 14px;
   --igc-avatar-size: 32px;
   --igc-avatar-ring: linear-gradient(45deg, #feda75, #fa7e1e, #d62976, #962fbf, #4f5bd5);
