@@ -86,6 +86,7 @@
     next: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>',
     burst: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16.792 1.904a6.04 6.04 0 0 0-4.797 2.127 6.052 6.052 0 0 0-4.787-2.127A6.985 6.985 0 0 0 .5 9.122c0 3.61 2.55 5.827 5.015 7.97.283.246.569.494.853.747l1.027.918a44.998 44.998 0 0 0 3.518 3.018 2 2 0 0 0 2.174 0 45.263 45.263 0 0 0 3.626-3.115l.922-.824c.293-.26.59-.519.885-.774 2.334-2.025 4.98-4.32 4.98-7.94a6.985 6.985 0 0 0-6.708-7.218Z"/></svg>',
     verified: '<svg class="igc-verified" viewBox="0 0 40 40" role="img" aria-label="Verified"><path fill="#0095f6" d="M19.998 3.094 14.638 0l-2.972 5.15H5.432v6.354L0 14.64 3.094 20 0 25.359l5.432 3.137v5.905h5.975L14.638 40l5.36-3.094L25.358 40l3.232-5.6h6.162v-6.01L40 25.359 36.905 20 40 14.641l-5.248-3.03v-6.46h-6.419L25.358 0l-5.36 3.094Z"/><path fill="#fff" d="m17.42 26.53-6.06-6.06 2.12-2.12 3.94 3.94 8.68-8.68 2.12 2.12z"/></svg>',
+    play: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5.5v13a1 1 0 0 0 1.52.85l10.4-6.5a1 1 0 0 0 0-1.7L9.52 4.65A1 1 0 0 0 8 5.5z"/></svg>',
     soundOff: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 9v6h4l5 4V5L7 9H3z"/><path d="m16 9 5 6m0-6-5 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
     soundOn: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 9v6h4l5 4V5L7 9H3z"/><path d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>'
   };
@@ -194,7 +195,6 @@
 
   /* Formatted post text (text blocks, video descriptions, code-block lines):
        bold          → account name
-       italic        → line under the account name (location)
        link → image  → profile picture
        other link    → where the comment icon links
      The rest is the caption ("key: value" lines still work). */
@@ -204,8 +204,6 @@
     var meta = {};
     var bold = $('strong, b', c);
     if (bold) { meta.account = bold.textContent.trim(); bold.remove(); }
-    var ital = $('em, i', c);
-    if (ital) { meta.location = ital.textContent.trim(); ital.remove(); }
     $$('a[href]', c).forEach(function (a) {
       var href = a.getAttribute('href');
       if (isImageUrl(href)) { if (!meta.avatar) meta.avatar = href; } else if (!meta.link) meta.link = href;
@@ -302,6 +300,17 @@
       }
     }
     if (block.classList.contains('sqs-block-video') || block.classList.contains('sqs-block-embed')) {
+      var html = block.innerHTML.replace(/&amp;/g, '&');
+      var yt = /(?:youtube(?:-nocookie)?\.com\/(?:embed\/|watch\?v=|shorts\/|v\/)|youtu\.be\/)([\w-]{11})/.exec(html);
+      var vm = !yt && /(?:player\.)?vimeo\.com\/(?:video\/)?(\d{6,})/.exec(html);
+      if (yt || vm) {
+        return [{
+          type: 'player',
+          url: yt ? 'https://www.youtube.com/embed/' + yt[1] + '?playsinline=1&rel=0&modestbranding=1'
+                  : 'https://player.vimeo.com/video/' + vm[1] + '?playsinline=1&title=0&byline=0&portrait=0',
+          text: $('.video-caption', block)
+        }];
+      }
       return [{ type: 'block', node: $('.sqs-block-content', block) || block, video: true }];
     }
     if (block.classList.contains('sqs-block-code')) {
@@ -621,6 +630,15 @@
         hv.setAttribute('data-hls', s.url);   // stream attached on first play
         slide.appendChild(hv);
         hasVideo = true;
+      } else if (s.type === 'player') {   // YouTube / Vimeo with their own play controls
+        var pf = el('iframe');
+        pf.src = s.url;
+        pf.allow = 'autoplay; fullscreen; picture-in-picture; encrypted-media';
+        pf.allowFullscreen = true;
+        pf.loading = 'lazy';
+        pf.title = 'Video';
+        slide.classList.add('igc-slide--player');
+        slide.appendChild(pf);
       } else if (s.type === 'embed') {
         var src = embedUrl(s.url);
         if (src) {
@@ -680,6 +698,16 @@
         mute.setAttribute('aria-label', on ? 'Mute' : 'Unmute');
       });
       media.appendChild(mute);
+    }
+    if (hasVideo) {
+      media.setAttribute('data-playing', 'false');
+      var playIcon = el('div', 'igc-play', ICON.play);
+      playIcon.setAttribute('aria-hidden', 'true');
+      media.appendChild(playIcon);
+      $$('video', track).forEach(function (v) {
+        v.addEventListener('play', function () { media.setAttribute('data-playing', 'true'); });
+        v.addEventListener('pause', function () { media.setAttribute('data-playing', 'false'); });
+      });
     }
     var burst = el('div', 'igc-burst', ICON.burst);
     media.appendChild(burst);
@@ -761,17 +789,37 @@
     if (o.rememberLikes && store(postKey + ':like') === '1') setLiked(true, false);
     like.addEventListener('click', function () { setLiked(!liked, true); });
 
+    /* single tap on a video = play / pause (waits briefly so a double-tap can still like) */
+    var tapTimer = 0;
+    media.addEventListener('click', function (e) {
+      if (e.target.closest('button, a')) return;
+      var v = $$('.igc-slide', track)[current];
+      v = v && $('video', v);
+      if (!v) return;
+      clearTimeout(tapTimer);
+      tapTimer = setTimeout(function () {
+        if (v.paused) {
+          v._igcUserPaused = false;
+          attachStream(v).then(function () { var pr = v.play(); if (pr && pr.catch) pr.catch(function () {}); });
+        } else {
+          v._igcUserPaused = true;
+          v.pause();
+        }
+      }, o.doubleTapLike ? 260 : 0);
+    });
+
     if (o.doubleTapLike) {
       var lastTap = 0;
       media.addEventListener('dblclick', function (e) {
         if (e.target.closest('button')) return;
         e.preventDefault();
+        clearTimeout(tapTimer);
         heartBurst();
       });
       media.addEventListener('touchend', function (e) {
         if (e.target.closest('button, a')) return;
         var now = Date.now();
-        if (now - lastTap < 300) { e.preventDefault(); heartBurst(); lastTap = 0; } else lastTap = now;
+        if (now - lastTap < 300) { e.preventDefault(); clearTimeout(tapTimer); heartBurst(); lastTap = 0; } else lastTap = now;
       });
     }
     function heartBurst() {
@@ -838,6 +886,7 @@
     $$('.igc-slide', track).forEach(function (s, k) {
       $$('video', s).forEach(function (v) {
         if (k === i && onScreen) {
+          if (v._igcUserPaused) return;
           attachStream(v).then(function () { var pr = v.play(); if (pr && pr.catch) pr.catch(function () {}); });
         }
         else v.pause();
@@ -845,8 +894,8 @@
     });
   };
 
-  /* Squarespace-hosted videos are HLS streams. Safari plays them natively;
-     other browsers get hls.js, loaded from jsDelivr only when needed. */
+  /* Squarespace-hosted videos are encrypted HLS streams, played with hls.js
+     (loaded from jsDelivr only when a page has one). */
   var HLS_SRC = 'https://cdn.jsdelivr.net/npm/hls.js@1/dist/hls.min.js';
   var hlsLoading = null;
   function loadHls() {
@@ -867,17 +916,21 @@
     var url = v.getAttribute('data-hls');
     if (!url) return Promise.resolve();
     if (v._igcStream) return v._igcStream;
-    if (v.canPlayType('application/vnd.apple.mpegurl')) {
-      v.src = url;
-      v._igcStream = Promise.resolve();
-    } else {
+    // Prefer hls.js: Chrome now *claims* native HLS support but fails on
+    // Squarespace's encrypted streams. Native is the fallback for browsers
+    // without MediaSource (older iPhones).
+    var native = function () { if (v.canPlayType('application/vnd.apple.mpegurl')) v.src = url; };
+    if (window.MediaSource || window.ManagedMediaSource) {
       v._igcStream = loadHls().then(function (Hls) {
-        if (!Hls || !Hls.isSupported()) return;
+        if (!Hls || !Hls.isSupported()) { native(); return; }
         var hls = new Hls({ capLevelToPlayerSize: true });
         hls.loadSource(url);
         hls.attachMedia(v);
         v._igcHls = hls;
-      }).catch(function () {});
+      }).catch(native);
+    } else {
+      native();
+      v._igcStream = Promise.resolve();
     }
     return v._igcStream;
   }

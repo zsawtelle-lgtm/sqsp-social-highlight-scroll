@@ -136,30 +136,41 @@ Uses the Will Myers Slider Pro pattern: a code block pulls in the sections below
    - a **blank Fluid Engine section** with **image blocks**, **video blocks**, code blocks
      with `<video src="…mp4" muted loop playsinline></video>`, and optionally a
      **text block** for the post text. Blocks are read top to bottom, then left to right.
-6. **Video posts:** a blank section holding just a **Video block** (uploaded video) is a
-   video post. The carousel plays the video's own stream muted and looping while the
-   post is centred, uses its thumbnail as the poster, and shows the mute button. The
-   video block's own autoplay/controls settings are ignored. Its **description** is
-   the post text, using the formatting rules below.
+6. **Video posts:** a blank section holding just a **Video block** is a video post.
+   Its **description** is the post text (formatting rules below), unless the code
+   block has a `<p>` line for that post. Keep one `<p>` per post, video posts included.
+   - **Uploaded video** (recommended): plays muted and looping while the post is
+     centred, with the video's thumbnail as the poster. **Tap** pauses/plays (a play
+     icon shows while paused), **double-tap** likes, and the speaker button unmutes. The
+     video block's own autoplay/controls settings are ignored.
+   - **YouTube / Vimeo:** shown with that player's own controls (tap its play button).
+     It doesn't autoplay, and swiping or double-tapping on the video goes to the
+     player, so use the arrows to move on.
 
 ### Post text formatting (text blocks, video descriptions, code-block lines)
 
 | Write it as | Becomes |
 |---|---|
 | **Bold** text | Account name for this post |
-| *Italic* text | Line under the account name (location) |
 | A link to an image (Squarespace image or video-thumbnail URL, or `.jpg/.png/.webp`) | Profile picture for this post. The link text is not shown |
 | Any other link | Where the comment icon links. The link text is not shown |
 | Everything else | Caption |
 
-Only the first bold and first italic are used. To get the image URL, open the image or
-video thumbnail on the live site and copy its address.
+Only the first bold text is used. For a line under the account name, add a
+`location: Boston, MA` line.
+
+**Profile picture link, step by step:** in the description, type any word (e.g. "avatar"),
+select it → **Link** → paste the image URL. Two easy sources for the URL:
+- **An image already on the site:** open the live page, right-click the image →
+  *Copy image address* (`https://images.squarespace-cdn.com/…`).
+- **Upload it as a file:** select the word → Link → **File** → upload the image.
+  This gives a `/s/name.png` link, which also works.
 
 ### Post details
 
 In any caption (list description, code block line, text block, video description),
 lines shaped `key: value` are pulled out and the rest is the caption. List item
-descriptions don't use the bold/italic rules above.
+descriptions don't use the bold / image-link rules above.
 
 | Key | Effect |
 |---|---|
@@ -348,14 +359,15 @@ The plugin watches `body.class` for `sqs-edit-mode-active` and tears down or reb
 | Text looks too spaced out | Set `--igc-letter-spacing: normal` (default). If a template rule still wins, add it on `#anchor .igc`. |
 | Photo order wrong (blank sections) | Blocks read top to bottom, then left to right. Nudge them in Fluid Engine. |
 | Video looks cropped | Videos fill the frame. Use a matching ratio, e.g. `9:16` for reels. |
-| Video shows only its poster | Check the browser console. Non-Safari browsers load hls.js from cdn.jsdelivr.net, so a blocker on that domain stops playback. |
+| Video shows only its poster | Tap it to start it. If it still won't play, check the browser console: uploaded videos load hls.js from cdn.jsdelivr.net, so a blocker on that domain stops playback. |
+| YouTube post shows the description text instead of a video | The YouTube address couldn't be found in the block. Re-add the video by URL in the Video block. |
 | Bold words in a caption became the account name | In text blocks, video descriptions and code-block lines, the first bold text is the account name. Don't use bold for emphasis there. |
 
 ## Deployed on
 
 | Site | Methods | Notes |
 |---|---|---|
-| swtldesignco.com/carousel-test-1 (staging) | A, C | v1.0 installed. Video-block post (v1.1): bold/italic/image-link description → name, location, avatar; HLS stream attached. Earlier: v1.1 tested by injecting it into the live page: list → 4 posts (20px native gap); code block + 3 Grid galleries with `first-image` → 3 posts with their own profile (SWTL Design Co, Physiq, fallback), captions from the code block, 30.72px native gap. No errors. |
+| swtldesignco.com/carousel-test-1 (staging) | A, C | v1.0 installed. Video-block post (v1.1): bold + image-link description → name + avatar; uploaded video plays in Chrome 154 (hls.js). Earlier: v1.1 tested by injecting it into the live page: list → 4 posts (20px native gap); code block + 3 Grid galleries with `first-image` → 3 posts with their own profile (SWTL Design Co, Physiq, fallback), captions from the code block, 30.72px native gap. No errors. |
 
 ## Open items
 
@@ -372,8 +384,13 @@ The plugin watches `body.class` for `sqs-edit-mode-active` and tears down or reb
   the alt text.
 - **Native video blocks** (website-component `.sqs-native-video[data-config-video]`) are rebuilt
   as a plain `<video>` on the block's HLS stream (`…/playlist.m3u8`, poster `…/thumbnail`).
-  Squarespace serves no MP4 for them. Stream attach verified on staging; actual playback
-  not verifiable in the headless test browser (no H.264), so confirm in Chrome and Safari.
-- YouTube/Vimeo video blocks are still moved into the slide as-is (untested).
+  Squarespace serves no MP4 for them, and the stream is AES-128 encrypted. hls.js is used
+  whenever MediaSource exists. Chrome 154 reports native HLS support (`canPlayType` →
+  "maybe") but fails on these streams with MEDIA_ERR 4, so native HLS is only the
+  fallback. **Verified playing in Chrome 154** on staging (autoplay, tap pause/play,
+  pause off-screen). Safari/iOS not yet checked.
+- YouTube/Vimeo blocks: the video id is found anywhere in the block's markup and shown in
+  the provider's own player. Tested on mock markup only; the live website-component
+  YouTube markup hasn't been seen yet.
 - `aspect: 'native'` on gallery posts measures the first photo tile (skips the profile image).
 - **Release:** v1.1.0 needs a `v1.1.0` release tag on `main` for `@1` to pick it up.
